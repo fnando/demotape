@@ -1,0 +1,32 @@
+# Bash configuration for demo tape environment
+
+set -o emacs
+
+# Ctrl+arrow word navigation
+bind '"\e[1;5C": forward-word'    # ctrl-right
+bind '"\e[1;5D": backward-word'   # ctrl-left
+bind '"\e[5C": forward-word'      # ctrl-right (ttyd/xterm.js)
+bind '"\e[5D": backward-word'     # ctrl-left (ttyd/xterm.js)
+
+# Additional key bindings
+bind '"\C-u": backward-kill-line' # ctrl-u
+bind '"\C-w": backward-kill-word' # ctrl-w
+bind '"\C-a": beginning-of-line'  # ctrl-a
+bind '"\C-e": end-of-line'        # ctrl-e
+bind '"\C-r": reverse-search-history' # ctrl-r
+
+enable-history() {
+  export HISTFILE="${TMPDIR:-/tmp}/bash_history_$$"
+  export HISTSIZE=1000
+  export HISTFILESIZE=1000
+  history -r
+}
+
+disable-history() {
+  unset HISTFILE
+  export HISTSIZE=0
+  export HISTFILESIZE=0
+  history -c
+}
+
+export PS1='$ '

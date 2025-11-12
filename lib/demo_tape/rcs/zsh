@@ -1,0 +1,40 @@
+# ZSH configuration for demo tape environment
+
+bindkey -e
+autoload -U up-line-or-beginning-search
+autoload -U down-line-or-beginning-search
+zle -N up-line-or-beginning-search
+zle -N down-line-or-beginning-search
+
+bindkey $'\e[1;5C' forward-word    # ctrl-right
+bindkey $'\e[1;5D' backward-word   # ctrl-left
+bindkey $'\e[5C' forward-word      # ctrl-right (ttyd/xterm.js)
+bindkey $'\e[5D' backward-word     # ctrl-left (ttyd/xterm.js)
+bindkey "^o" emacs-backward-word   # ctrl-o
+bindkey "^p" emacs-forward-word    # ctrl-p
+bindkey $'\e[A' up-line-or-beginning-search # up
+bindkey $'\e[B' down-line-or-beginning-search # down
+bindkey '^u' backward-kill-line    # ctrl-u
+bindkey '^d' kill-whole-line       # ctrl-d
+bindkey "^r" history-incremental-search-backward
+bindkey "∆" history-search-backward # option-j
+bindkey "˚" history-search-forward  # option-k
+bindkey '^a' beginning-of-line
+bindkey '^e' end-of-line
+bindkey '^w' backward-kill-word
+
+enable-history() {
+  export HISTFILE="${TMPDIR:-/tmp}/zsh_history_$$"
+  export HISTSIZE=1000
+  export SAVEHIST=1000
+  fc -R
+}
+
+disable-history() {
+  unset HISTFILE
+  export HISTSIZE=0
+  export SAVEHIST=0
+  fc -P
+}
+
+export PROMPT='$ '

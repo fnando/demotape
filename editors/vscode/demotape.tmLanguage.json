@@ -1,0 +1,201 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "DemoTape",
+  "scopeName": "source.demotape",
+  "fileTypes": ["tape"],
+  "patterns": [{ "include": "#comments" }, { "include": "#commands" }],
+  "repository": {
+    "comments": {
+      "patterns": [
+        {
+          "name": "comment.line.number-sign.demotape",
+          "match": "#.*$"
+        }
+      ]
+    },
+    "commands": {
+      "patterns": [
+        {
+          "comment": "Commands with @ duration/speed",
+          "match": "\\b(Type|TypeFile|WaitUntil)\\b",
+          "name": "keyword.control.demotape",
+          "captures": {
+            "1": { "name": "keyword.control.demotape" }
+          }
+        },
+        {
+          "comment": "Set command with option value",
+          "match": "\\b(Set)\\b",
+          "name": "keyword.control.demotape",
+          "captures": {
+            "1": { "name": "keyword.control.demotape" }
+          }
+        },
+        {
+          "comment": "Output command",
+          "match": "\\b(Output)\\b",
+          "name": "keyword.control.demotape",
+          "captures": {
+            "1": { "name": "keyword.control.demotape" }
+          }
+        },
+        {
+          "comment": "Commands with string argument",
+          "match": "\\b(Copy|Paste|Send|Include|Screenshot|TypeFile)\\b",
+          "name": "keyword.control.demotape"
+        },
+        {
+          "comment": "Commands with duration argument",
+          "match": "\\b(Wait|Sleep)\\b",
+          "name": "keyword.control.demotape"
+        },
+        {
+          "comment": "Meta commands",
+          "match": "\\b(Require)\\b",
+          "name": "keyword.control.demotape"
+        },
+        {
+          "comment": "Control commands (no arguments)",
+          "match": "\\b(Pause|Resume|Clear)\\b",
+          "name": "keyword.control.demotape"
+        },
+        {
+          "comment": "Key combinations and individual keys",
+          "match": "\\b(Enter|Return|Tab|Backspace|Delete|Escape|Esc|Space|Up|Down|Left|Right|Home|End|PageUp|PageDown|Insert|Cancel|Help|Pause|Semicolon|Colon|Equals|Slash|BackSlash|Numpad[0-9]|Multiply|Add|Separator|Subtract|Decimal|Divide|F[1-9]|F1[0-2])\\b",
+          "name": "keyword.control.demotape"
+        },
+        {
+          "comment": "Modifiers",
+          "match": "\\b(Ctrl|Control|Alt|Option|Shift|Meta|Command)\\b",
+          "name": "keyword.control.demotape"
+        },
+        {
+          "comment": "Key combinations with +",
+          "match": "\\b(Ctrl|Control|Alt|Option|Shift|Meta|Command|Enter|Return|Tab|Backspace|Delete|Escape|Esc|Space|Up|Down|Left|Right|Home|End|PageUp|PageDown|Insert|Cancel|Help|Pause|Semicolon|Colon|Equals|Slash|BackSlash|Numpad[0-9]|Multiply|Add|Separator|Subtract|Decimal|Divide|F[1-9]|F1[0-2]|[A-Za-z0-9])\\s*\\+\\s*(Ctrl|Control|Alt|Option|Shift|Meta|Command|Enter|Return|Tab|Backspace|Delete|Escape|Esc|Space|Up|Down|Left|Right|Home|End|PageUp|PageDown|Insert|Cancel|Help|Pause|Semicolon|Colon|Equals|Slash|Numpad[0-9]|Multiply|Add|Separator|Subtract|Decimal|Divide|F[1-9]|F1[0-2]|[A-Za-z0-9])",
+          "captures": {
+            "0": { "name": "keyword.control.demotape" }
+          }
+        },
+        {
+          "comment": "Plus operator in key combos",
+          "match": "\\+",
+          "name": "keyword.operator.demotape"
+        },
+        {
+          "comment": "Set command options",
+          "match": "\\b(border_radius|shell|theme|width|height|font_size|font_family|line_height|cursor_blink|cursor_width|cursor_style|letter_spacing|padding|margin|margin_fill|fps|typing_speed|loop|loop_delay|variable_typing)(\\.[a-z_]+)?\\b",
+          "captures": {
+            "1": { "name": "variable.parameter.demotape" },
+            "2": { "name": "variable.other.member.demotape" }
+          }
+        },
+        {
+          "comment": "At symbol for speed/timeout",
+          "match": "@",
+          "name": "keyword.operator.demotape"
+        },
+        {
+          "comment": "Comma separator",
+          "match": ",",
+          "name": "punctuation.separator.demotape"
+        },
+        { "include": "#strings" },
+        { "include": "#regex" },
+        { "include": "#duration" },
+        { "include": "#numbers" },
+        { "include": "#booleans" }
+      ]
+    },
+    "strings": {
+      "patterns": [
+        {
+          "comment": "Triple-quoted strings for multiline",
+          "name": "string.quoted.triple.demotape",
+          "begin": "\"\"\"",
+          "end": "\"\"\"",
+          "beginCaptures": {
+            "0": { "name": "punctuation.definition.string.begin.demotape" }
+          },
+          "endCaptures": {
+            "0": { "name": "punctuation.definition.string.end.demotape" }
+          }
+        },
+        {
+          "comment": "Double-quoted strings",
+          "name": "string.quoted.double.demotape",
+          "begin": "\"",
+          "end": "\"",
+          "beginCaptures": {
+            "0": { "name": "punctuation.definition.string.begin.demotape" }
+          },
+          "endCaptures": {
+            "0": { "name": "punctuation.definition.string.end.demotape" }
+          },
+          "patterns": [
+            {
+              "name": "constant.character.escape.demotape",
+              "match": "\\\\(u[0-9a-fA-F]{4}|U[0-9a-fA-F]{8}|[ntr\\\\\"])"
+            }
+          ]
+        },
+        {
+          "comment": "Single-quoted strings",
+          "name": "string.quoted.single.demotape",
+          "begin": "'",
+          "end": "'",
+          "beginCaptures": {
+            "0": { "name": "punctuation.definition.string.begin.demotape" }
+          },
+          "endCaptures": {
+            "0": { "name": "punctuation.definition.string.end.demotape" }
+          },
+          "patterns": [
+            {
+              "name": "constant.character.escape.demotape",
+              "match": "\\\\(u[0-9a-fA-F]{4}|U[0-9a-fA-F]{8}|[ntr\\\\'])"
+            }
+          ]
+        }
+      ]
+    },
+    "regex": {
+      "patterns": [
+        {
+          "name": "string.regexp.demotape",
+          "match": "/([^/\\\\]|\\\\.)*/"
+        }
+      ]
+    },
+    "duration": {
+      "patterns": [
+        {
+          "match": "(\\d+(?:\\.\\d+)?)(ms|s|m|h)\\b",
+          "captures": {
+            "1": { "name": "constant.numeric.float.demotape" },
+            "2": { "name": "keyword.other.unit.demotape" }
+          }
+        }
+      ]
+    },
+    "numbers": {
+      "patterns": [
+        {
+          "name": "constant.numeric.float.demotape",
+          "match": "\\d*\\.\\d+"
+        },
+        {
+          "name": "constant.numeric.integer.demotape",
+          "match": "\\d+"
+        }
+      ]
+    },
+    "booleans": {
+      "patterns": [
+        {
+          "name": "constant.language.boolean.demotape",
+          "match": "\\b(true|false)\\b"
+        }
+      ]
+    }
+  }
+}

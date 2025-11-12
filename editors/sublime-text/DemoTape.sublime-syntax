@@ -1,0 +1,243 @@
+%YAML 1.2
+---
+name: DemoTape
+file_extensions:
+  - tape
+scope: source.demotape
+
+variables:
+  line_comment: "#"
+
+contexts:
+  main:
+    - include: comments
+    - include: commands
+
+  comments:
+    - match: "#.*$"
+      scope: comment.line.number-sign.demotape
+
+  commands:
+    # Commands with @ duration/speed
+    - match: '\b(Type|TypeFile|WaitUntil)\b'
+      scope: keyword.control.demotape
+      push: command_with_speed_or_timeout
+
+    # Set command with option value
+    - match: '\b(Set)\b'
+      scope: keyword.control.demotape
+      push: set_command
+
+    # Output command
+    - match: '\b(Output)\b'
+      scope: keyword.control.demotape
+      push: output_command
+
+    # Commands with string argument
+    - match: '\b(Copy|Paste|Send|Include|Screenshot|TypeFile)\b'
+      scope: keyword.control.demotape
+      push: string_argument
+
+    # Commands with duration argument
+    - match: '\b(Wait|Sleep)\b'
+      scope: keyword.control.demotape
+      push: duration_argument
+
+    # Commands with regex argument
+    - match: '\b(WaitUntil)\b(?!\s*@)'
+      scope: keyword.control.demotape
+      push: regex_argument
+
+    # Meta commands
+    - match: '\b(Require)\b'
+      scope: keyword.control.demotape
+      push: identifier_argument
+
+    # Control commands (no arguments)
+    - match: '\b(Pause|Resume|Clear)\b'
+      scope: keyword.control.demotape
+
+    # Key combinations and individual keys
+    - match: '\b(Enter|Return|Tab|Backspace|Delete|Escape|Esc|Space|Up|Down|Left|Right|Home|End|PageUp|PageDown|Insert|Cancel|Help|Pause|Semicolon|Colon|Equals|Slash|BackSlash|Numpad[0-9]|Multiply|Add|Separator|Subtract|Decimal|Divide|F[1-9]|F1[0-2])\b'
+      scope: keyword.control.demotape
+      push: possible_key_count
+
+    # Modifiers
+    - match: '\b(Ctrl|Control|Alt|Option|Shift|Meta|Command)\b'
+      scope: keyword.control.demotape
+      push: key_combo
+
+    # Letters and numbers as keys
+    - match: '\b[A-Za-z]\b(?=\s*\+|\s*$|\s*\d+\s*$)'
+      scope: keyword.control.demotape
+      push: possible_key_combo
+
+  key_combo:
+    - match: '\+'
+      scope: keyword.operator.demotape
+    - match: '\b(Ctrl|Control|Alt|Option|Shift|Meta|Command|Enter|Return|Tab|Backspace|Delete|Escape|Esc|Space|Up|Down|Left|Right|Home|End|PageUp|PageDown|Insert|Cancel|Help|Pause|Semicolon|Colon|Equals|Slash|BackSlash|Numpad[0-9]|Multiply|Add|Separator|Subtract|Decimal|Divide|F[1-9]|F1[0-2]|[A-Za-z0-9])\b'
+      scope: keyword.control.demotape
+    - match: '\d+'
+      scope: constant.numeric.integer.demotape
+      pop: true
+    - match: "$"
+      pop: true
+    - match: '(?=\S)'
+      pop: true
+
+  possible_key_combo:
+    - match: '\+'
+      scope: keyword.operator.demotape
+      set: key_combo
+    - match: '\d+'
+      scope: constant.numeric.integer.demotape
+      pop: true
+    - match: "$"
+      pop: true
+    - match: '(?=\S)'
+      pop: true
+
+  possible_key_count:
+    - match: "@"
+      scope: keyword.operator.demotape
+      push: duration_then_count
+    - match: '\d+'
+      scope: constant.numeric.integer.demotape
+      pop: true
+    - match: "$"
+      pop: true
+    - match: '(?=\S)'
+      pop: true
+
+  duration_then_count:
+    - include: duration
+    - include: numbers
+    - match: '\s+'
+      scope: text
+    - match: "$"
+      pop: true
+    - match: '(?=\S)'
+      pop: true
+
+  end_of_line:
+    - match: "$"
+      pop: true
+
+  command_with_speed_or_timeout:
+    - match: "@"
+      scope: keyword.operator.demotape
+      push: duration_value
+    - include: string_argument
+    - match: "$"
+      pop: true
+
+  set_command:
+    - match: '\b(border_radius|shell|theme|width|height|font_size|font_family|line_height|cursor_blink|cursor_width|cursor_style|letter_spacing|padding|margin|margin_fill|fps|typing_speed|loop|loop_delay|variable_typing)(\.[a-z_]+)?\b'
+      captures:
+        1: variable.parameter.demotape
+        2: variable.other.member.demotape
+      push: set_value
+    - match: "$"
+      pop: true
+
+  set_value:
+    - include: strings
+    - include: numbers
+    - include: duration
+    - match: ","
+      scope: punctuation.separator.demotape
+    - match: '\b(true|false)\b'
+      scope: constant.language.boolean.demotape
+    - match: '\b[a-zA-Z_]\w*\b'
+      scope: string.unquoted.demotape
+    - match: "$"
+      pop: true
+
+  output_command:
+    - include: strings
+    - match: "$"
+      pop: true
+
+  string_argument:
+    - include: strings
+    - match: '\S+'
+      scope: string.unquoted.demotape
+    - match: "$"
+      pop: true
+
+  identifier_argument:
+    - include: strings
+    - match: '\b[a-zA-Z_]\w*\b'
+      scope: entity.name.demotape
+    - match: "$"
+      pop: true
+
+  duration_argument:
+    - include: duration
+    - include: numbers
+    - match: "$"
+      pop: true
+
+  regex_argument:
+    - match: '/([^/\\]|\\.)*/'
+      scope: string.regexp.demotape
+      pop: true
+    - match: "$"
+      pop: true
+
+  duration_value:
+    - match: '(\d+(?:\.\d+)?)(ms|s|m|h)\b'
+      captures:
+        1: constant.numeric.float.demotape
+        2: keyword.other.unit.demotape
+      pop: true
+    - match: '\d+(?:\.\d+)?'
+      scope: constant.numeric.float.demotape
+      pop: true
+    - match: "$"
+      pop: true
+
+  duration:
+    - match: '(\d+(?:\.\d+)?)(ms|s|m|h)\b'
+      captures:
+        1: constant.numeric.float.demotape
+        2: keyword.other.unit.demotape
+
+  numbers:
+    - match: '\d*\.\d+'
+      scope: constant.numeric.float.demotape
+    - match: '\d+'
+      scope: constant.numeric.integer.demotape
+
+  strings:
+    - match: '"""'
+      scope: punctuation.definition.string.begin.demotape
+      push: triple_quoted_string
+    - match: '"'
+      scope: punctuation.definition.string.begin.demotape
+      push: double_quoted_string
+    - match: "'"
+      scope: punctuation.definition.string.begin.demotape
+      push: single_quoted_string
+
+  triple_quoted_string:
+    - meta_scope: string.quoted.triple.demotape
+    - match: '"""'
+      scope: punctuation.definition.string.end.demotape
+      pop: true
+
+  double_quoted_string:
+    - meta_scope: string.quoted.double.demotape
+    - match: '\\(u[0-9a-fA-F]{4}|U[0-9a-fA-F]{8}|[ntr\\"])'
+      scope: constant.character.escape.demotape
+    - match: '"'
+      scope: punctuation.definition.string.end.demotape
+      pop: true
+
+  single_quoted_string:
+    - meta_scope: string.quoted.single.demotape
+    - match: "\\\\(u[0-9a-fA-F]{4}|U[0-9a-fA-F]{8}|[ntr\\\\'])"
+      scope: constant.character.escape.demotape
+    - match: "'"
+      scope: punctuation.definition.string.end.demotape
+      pop: true

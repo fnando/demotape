@@ -1,0 +1,1 @@
+Include "examples/demotape.tape"
