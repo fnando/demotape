@@ -1,0 +1,22 @@
+{
+  "background": "#31363b",
+  "black": "#31363b",
+  "blue": "#1d99f3",
+  "bright_black": "#7f8c8d",
+  "bright_blue": "#3daee9",
+  "bright_cyan": "#16a085",
+  "bright_green": "#1cdc9a",
+  "bright_magenta": "#8e44ad",
+  "bright_red": "#c0392b",
+  "bright_white": "#fcfcfc",
+  "bright_yellow": "#fdbc4b",
+  "cursor": "#eff0f1",
+  "cyan": "#1abc9c",
+  "foreground": "#eff0f1",
+  "green": "#11d116",
+  "magenta": "#9b59b6",
+  "red": "#ed1515",
+  "selection_background": "#eff0f1",
+  "white": "#eff0f1",
+  "yellow": "#f67400"
+}

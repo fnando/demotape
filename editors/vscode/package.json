@@ -1,0 +1,30 @@
+{
+  "name": "demotape",
+  "displayName": "DemoTape",
+  "description": "Syntax highlighting for DemoTape (.tape) files",
+  "version": "0.1.0",
+  "publisher": "fnando",
+  "engines": {
+    "vscode": "^1.50.0"
+  },
+  "categories": [
+    "Programming Languages"
+  ],
+  "contributes": {
+    "languages": [
+      {
+        "id": "demotape",
+        "aliases": ["DemoTape", "demotape"],
+        "extensions": [".tape"],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "demotape",
+        "scopeName": "source.demotape",
+        "path": "./demotape.tmLanguage.json"
+      }
+    ]
+  }
+}

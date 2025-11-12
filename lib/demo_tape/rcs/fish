@@ -1,0 +1,31 @@
+# Fish configuration for demo tape environment
+
+# Ctrl+arrow word navigation
+bind \e\[1\;5C forward-word      # ctrl-right
+bind \e\[1\;5D backward-word     # ctrl-left
+bind \e\[5C forward-word         # ctrl-right (ttyd/xterm.js)
+bind \e\[5D backward-word        # ctrl-left (ttyd/xterm.js)
+
+# Additional key bindings
+bind \cu backward-kill-line      # ctrl-u
+bind \cw backward-kill-word      # ctrl-w
+bind \ca beginning-of-line       # ctrl-a
+bind \ce end-of-line             # ctrl-e
+bind \cr history-search-backward # ctrl-r
+
+set -g fish_autosuggestion_enabled 0
+set -g fish_color_autosuggestion ''
+
+function enable-history
+  set -g fish_history fish
+  set -g fish_history_max 1000
+end
+
+function disable-history
+  set -e fish_history
+  history clear
+end
+
+function fish_prompt
+  echo '$ '
+end

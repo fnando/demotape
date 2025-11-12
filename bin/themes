@@ -1,0 +1,37 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+require "json"
+
+def normalize(text)
+  text
+    .to_s
+    .gsub(/([A-Z]+)([A-Z][a-z])/, '\1_\2')
+    .gsub(/([a-z\d])([A-Z])/, '\1_\2')
+    .downcase
+    .tr("-", "_")
+    .tr(" ", "_")
+    .gsub("+", "_plus")
+    .gsub(/[^a-z0-9_]/, "_").squeeze("_")
+    .gsub(/_$/, "")
+    .gsub(/^_/, "")
+    .gsub("i_term", "iterm")
+end
+
+system("wget -q -O themes.json https://2zrysvpla9.execute-api.eu-west-2.amazonaws.com/prod/themes")
+list = JSON.load_file("themes.json", symbolize_names: true)
+
+list.each do |item|
+  item.delete(:meta)
+  name = normalize(item.delete(:name))
+  item.transform_keys! { normalize(it).to_sym }
+  item[:magenta] = item.delete(:purple)
+  item[:bright_magenta] = item.delete(:bright_purple)
+  item[:cursor] = item.delete(:cursor_color)
+
+  item = item.sort_by {|k, _v| k.to_s }.to_h
+
+  File.open("lib/demo_tape/themes/#{name}.json", "w") do |io|
+    io << JSON.pretty_generate(item)
+  end
+end

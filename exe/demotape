@@ -1,0 +1,11 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+require_relative "../lib/demo_tape"
+require_relative "../lib/demo_tape/cli"
+
+# `run` is reserved with thor 🫠🙄🤦‍♂️
+argv = ARGV.dup
+argv[0] = "_run" if argv[0] == "run"
+
+DemoTape::CLI.start(argv)

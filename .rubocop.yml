@@ -1,0 +1,18 @@
+---
+inherit_gem:
+  rubocop-fnando: .rubocop.yml
+
+AllCops:
+  TargetRubyVersion: 3.4
+  NewCops: enable
+  Exclude:
+    - vendor/**/*
+    - gemfiles/**/*
+    - lib/demo_tape/parser.rb
+    - examples/*.rb
+
+Gemspec/AttributeAssignment:
+  Enabled: false
+
+Style/IdenticalConditionalBranches:
+  Enabled: false

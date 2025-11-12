@@ -1,0 +1,15 @@
+/.bundle/
+/.yardoc
+/_yardoc/
+/coverage/
+/doc/
+/pkg/
+/spec/reports/
+/tmp/
+/vendor/
+*.log
+*.lock
+*.output
+examples/themes/*.mp4
+/themes.json
+*.sw*
