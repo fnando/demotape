@@ -40,7 +40,6 @@ Gem::Specification.new do |spec|
   spec.add_dependency "chunky_png"
   spec.add_dependency "json"
   spec.add_dependency "racc"
-  spec.add_dependency "rack"
   spec.add_dependency "selenium-webdriver"
   spec.add_dependency "shellwords"
   spec.add_dependency "thor"
