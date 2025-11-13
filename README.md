@@ -117,10 +117,7 @@ for typing multiple commands or complex text that spans several lines.
 **TypeFile** - Reads file and types its text into the terminal
 
 ```demotape
-TypeFile "text"
-TypeFile@500ms "slow typing"
-TypeFile@2s "very slow"
-TypeFile@10ms "fast typing"
+TypeFile "path/to/file"
 ```
 
 #### Keys and Key Combinations
