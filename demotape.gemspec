@@ -9,12 +9,12 @@ Gem::Specification.new do |spec|
   spec.email   = ["me@fnando.com"]
   spec.metadata = {"rubygems_mfa_required" => "true"}
 
-  spec.summary     = "Record terminal sessions using ttyd."
+  spec.summary     = "Record terminal sessions from your CLI tools"
   spec.description = spec.summary
   spec.license     = "MIT"
   spec.required_ruby_version = Gem::Requirement.new(">= 3.4.0")
 
-  github_url = "https://github.com/fnando/demo_tape"
+  github_url = "https://github.com/fnando/demotape"
   github_tree_url = "#{github_url}/tree/v#{spec.version}"
 
   spec.homepage = github_url
