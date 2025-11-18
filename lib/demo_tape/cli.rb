@@ -151,6 +151,11 @@ module DemoTape
       end
     end
 
+    desc "ascii", "Displays an ASCII art demo tape logo"
+    def ascii
+      puts File.read(File.join(__dir__, "../../demotape.ascii"))
+    end
+
     no_commands do
       # Add helper methods here
     end
