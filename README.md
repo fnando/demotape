@@ -55,6 +55,12 @@ $ echo "Type 'echo \"it works with stdin too\"'\nEnter\nSleep 5" | \
         info  Finished in 11.92s
 ```
 
+### Output formats
+
+- When exporting videos, you can choose between `.mp4`, `.webm` or `.avi`.
+  Choose `.avi`/`.mp4` if you need a lossless intermediate video to be processed
+  in a pipeline.
+
 ### Examples
 
 The [`examples/`](https://github.com/fnando/demotape/tree/main/examples) folder

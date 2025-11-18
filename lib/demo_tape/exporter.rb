@@ -47,16 +47,20 @@ module DemoTape
         inputs << "-loop 1 -i #{Shellwords.escape(mask_path)}"
       end
 
+      encoder = if File.extname(path).downcase == ".avi"
+                  "-c:v ffv1"
+                else
+                  "-c:v libx264 -crf 0 -pix_fmt yuv444p"
+                end
+
       cmd = <<~CMD
         ffmpeg -y \
           -loglevel error \
           #{inputs.join(" \\\n            ")} \
           -filter_complex "#{filter}" \
           -frames:v #{frame_count} \
-          -c:v libx264 \
-          -pix_fmt yuv420p \
           -r #{options.fps} \
-          -movflags +faststart \
+          #{encoder} \
           #{Shellwords.escape(path)}
       CMD
 

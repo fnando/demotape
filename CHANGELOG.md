@@ -11,9 +11,12 @@ Prefix your message with one of the following:
 - [Security] in case of vulnerabilities.
 -->
 
-## [Unreleased]
+## Unreleased
 
 - [Added] Command `demotape ascii` to print ASCII logo.
+- [Added] Support for exporting `.avi` (lossless)
+- [Changed] Export lossless videos now by default
+- [Fixed] Export screenshots only once per path
 
 ## v0.0.0
 

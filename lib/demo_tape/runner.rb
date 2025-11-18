@@ -699,7 +699,7 @@ module DemoTape
         self.screenshot_count += 1
       end
 
-      screenshot_paths.each do |screenshot_path|
+      screenshot_paths.uniq { it.expand_path.to_s }.each do |screenshot_path|
         exporter.png(screenshot_path)
         path = thor.set_color(Shellwords.escape(screenshot_path.to_s), :magenta)
         thor.say_status :screenshot, "Saved to #{path}"
