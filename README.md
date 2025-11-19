@@ -26,6 +26,51 @@ Or add the following line to your project's Gemfile:
 gem "demotape"
 ```
 
+### Shell Completion
+
+DemoTape supports shell completion for Bash, Zsh, Fish, and PowerShell. To set
+up completion for your shell:
+
+**Bash:**
+
+```bash
+demotape completion --shell=bash > /usr/local/etc/bash_completion.d/demotape
+```
+
+Or add this to your `~/.bashrc`:
+
+```bash
+source <(demotape completion --shell=bash)
+```
+
+**Zsh:**
+
+Add this to your `~/.zshrc`:
+
+```zsh
+source <(demotape completion --shell=zsh)
+```
+
+Or generate the completion script to a file in your `$fpath`:
+
+```zsh
+demotape completion --shell=zsh > /usr/local/share/zsh/site-functions/_demotape
+```
+
+**Fish:**
+
+```fish
+demotape completion --shell=fish > ~/.config/fish/completions/demotape.fish
+```
+
+**PowerShell:**
+
+Add this to your PowerShell profile:
+
+```powershell
+demotape completion --shell=powershell | Out-String | Invoke-Expression
+```
+
 ## Usage
 
 Run a DemoTape script:

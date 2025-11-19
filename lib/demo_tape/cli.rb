@@ -127,6 +127,14 @@ module DemoTape
            type: :boolean,
            default: false,
            desc: "Take a single screenshot at the end of the session"
+    option :run_enter_delay,
+           type: :numeric,
+           default: 1,
+           desc: "Delay (in seconds) before pressing Enter"
+    option :run_sleep,
+           type: :numeric,
+           default: 3,
+           desc: "Delay (in seconds) after running each command"
     def _run(file_path = "")
       options = self.options.dup
       options[:padding] =
