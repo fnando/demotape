@@ -11,6 +11,13 @@ Prefix your message with one of the following:
 - [Security] in case of vulnerabilities.
 -->
 
+## Unreleased
+
+- [Added] Add `Run` command to execute shell commands (combines Type, Sleep,
+  Enter, Sleep).
+- [Added] Add `Set run_enter_delay` configuration option (default: 300ms).
+- [Added] Add `Set run_sleep` configuration option (default: 1s).
+
 ## v0.0.2
 
 - [Added] Add `demotape completion` command to generate shell completions.

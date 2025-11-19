@@ -171,6 +171,37 @@ for typing multiple commands or complex text that spans several lines.
 TypeFile "path/to/file"
 ```
 
+**Run** - Type a command, wait, press Enter, and wait for output
+
+```demotape
+Run "clear"
+Run "ls -la"
+Run@5s "npm install"
+```
+
+The `Run` command is a convenience that combines typing text, waiting briefly,
+pressing Enter, and waiting for the command to complete. It's equivalent to:
+
+```demotape
+Type "command"
+Sleep 300ms
+Enter
+Sleep 1s
+```
+
+You can customize the timing behavior:
+
+```demotape
+Set run_enter_delay 300ms  # Time to wait before pressing Enter (default: 300ms)
+Set run_sleep 1s            # Time to wait after pressing Enter (default: 1s)
+```
+
+The `@` modifier overrides the post-Enter sleep duration:
+
+```demotape
+Run@5s "long-running-command"  # Waits 5s after Enter instead of 1s
+```
+
 #### Keys and Key Combinations
 
 - **Special keys:** `Backspace`, `Delete`, `End`, `Enter`, `Escape`, `Home`,
@@ -563,7 +594,7 @@ Sleep 1s
 
 ### Valid Commands Reference
 
-- **Typing**: `Type`, `TypeFile`
+- **Typing**: `Type`, `TypeFile`, `Run`
 - **Special Keys**: `Enter`, `Space`, `Tab`, `Backspace`, `Escape`, `Delete`,
   `Insert`, `Home`, `End`, `PageUp`, `PageDown`, `Up`, `Down`, `Left`, `Right`,
   `F1-F12`

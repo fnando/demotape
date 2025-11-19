@@ -6,6 +6,8 @@
     { "trigger": "Type@", "contents": "Type@${1:50ms} \"${2:text}\"" },
     { "trigger": "TypeFile", "contents": "TypeFile \"${1:path/to/file}\"" },
     { "trigger": "TypeFile@", "contents": "TypeFile@${1:50ms} \"${2:path/to/file}\"" },
+    { "trigger": "Run", "contents": "Run \"${1:command}\"" },
+    { "trigger": "Run@", "contents": "Run@${1:1s} \"${2:command}\"" },
     { "trigger": "Copy", "contents": "Copy \"${1:text}\"" },
     { "trigger": "Paste", "contents": "Paste \"${1:text}\"" },
     { "trigger": "Send", "contents": "Send \"${1:text}\"" },
@@ -56,6 +58,8 @@
     { "trigger": "Set variable_typing", "contents": "Set variable_typing ${1:true}" },
     { "trigger": "Set loop", "contents": "Set loop ${1:true}" },
     { "trigger": "Set loop_delay", "contents": "Set loop_delay ${1:2s}" },
+    { "trigger": "Set run_enter_delay", "contents": "Set run_enter_delay ${1:300ms}" },
+    { "trigger": "Set run_sleep", "contents": "Set run_sleep ${1:1s}" },
 
     // Theme color overrides
     { "trigger": "Set theme.background", "contents": "Set theme.background \"${1:#222222}\"" },

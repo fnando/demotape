@@ -11,7 +11,7 @@ endif
 syn match demotapeComment "#.*$"
 
 " Commands
-syn keyword demotapeCommand Type TypeFile WaitUntil Set Output Copy Paste Send Include Screenshot
+syn keyword demotapeCommand Type TypeFile WaitUntil Run Set Output Copy Paste Send Include Screenshot
 syn keyword demotapeCommand Wait Sleep Require Pause Resume Clear nextgroup=demotapeString,demotapeDuration,demotapeNumber skipwhite
 
 " Special keys
@@ -33,7 +33,8 @@ syn match demotapeOperator "@"
 syn keyword demotapeOption border_radius shell theme width height font_size font_family
 syn keyword demotapeOption line_height cursor_blink cursor_width cursor_style letter_spacing
 syn keyword demotapeOption padding margin margin_fill fps typing_speed loop loop_delay variable_typing
-syn match demotapeOption "\<\(border_radius\|shell\|theme\|width\|height\|font_size\|font_family\|line_height\|cursor_blink\|cursor_width\|cursor_style\|letter_spacing\|padding\|margin\|margin_fill\|fps\|typing_speed\|loop_delay\|loop\|variable_typing\)\.\w\+\>"
+syn keyword demotapeOption run_enter_delay run_sleep
+syn match demotapeOption "\<\(border_radius\|shell\|theme\|width\|height\|font_size\|font_family\|line_height\|cursor_blink\|cursor_width\|cursor_style\|letter_spacing\|padding\|margin\|margin_fill\|fps\|typing_speed\|loop_delay\|loop\|variable_typing\|run_enter_delay\|run_sleep\)\.\w\+\>"
 
 " Strings
 syn region demotapeString start=+"+ skip=+\\\\\|\\"+ end=+"+ contains=demotapeEscape

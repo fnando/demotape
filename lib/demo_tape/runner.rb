@@ -661,7 +661,14 @@ module DemoTape
       end
 
       send_keys(:control, "l")
-      sleep 0.5
+      run_wait(Command.new("Wait", "", duration: 0.5))
+    end
+
+    def run_run(command)
+      run_type(Command.new("Type", command.args))
+      run_wait(Command.new("Wait", "", duration: options.run_enter_delay))
+      send_keys(:enter)
+      run_wait(Command.new("Wait", "", duration: options.run_sleep))
     end
 
     def run_type_file(command)

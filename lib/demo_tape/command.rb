@@ -75,6 +75,7 @@ module DemoTape
       Paste
       Require
       Resume
+      Run
       Screenshot
       Send
       Set
@@ -86,7 +87,7 @@ module DemoTape
     ].freeze
 
     META_COMMANDS = %w[Require Set Include Output].freeze
-    COMMANDS_WITH_SPEED = KEY_MAPPING.keys + %w[Type]
+    COMMANDS_WITH_SPEED = KEY_MAPPING.keys + %w[Type TypeFile Run].freeze
     COMMANDS_WITH_TIMEOUT = %w[WaitUntil].freeze
     VALID_TIME_UNITS = %w[ms s m h].freeze
 
