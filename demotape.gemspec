@@ -43,6 +43,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency "selenium-webdriver"
   spec.add_dependency "shellwords"
   spec.add_dependency "thor"
+  spec.add_dependency "thor-completion"
   spec.add_dependency "tty-spinner"
 
   spec.add_development_dependency "minitest"

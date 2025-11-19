@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "thor"
+require "thor/completion"
 
 module DemoTape
   class CLI < Thor
@@ -154,6 +155,21 @@ module DemoTape
     desc "ascii", "Displays an ASCII art demo tape logo"
     def ascii
       puts File.read(File.join(__dir__, "../../demotape.ascii"))
+    end
+
+    desc "completion", "Generate shell completion script"
+    option :shell,
+           type: :string,
+           required: true,
+           enum: %w[bash zsh powershell fish]
+    def completion
+      puts Thor::Completion.generate(
+        name: "demotape",
+        description: "Record terminal sessions from your CLI tools.",
+        version: VERSION,
+        cli: self.class,
+        shell: options.shell
+      )
     end
 
     no_commands do

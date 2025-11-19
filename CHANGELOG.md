@@ -11,6 +11,10 @@ Prefix your message with one of the following:
 - [Security] in case of vulnerabilities.
 -->
 
+## Unreleased
+
+- [Added] Add `demotape completion` command to generate shell completions.
+
 ## v0.0.1
 
 - [Added] Command `demotape ascii` to print ASCII logo.
