@@ -11,7 +11,7 @@ Prefix your message with one of the following:
 - [Security] in case of vulnerabilities.
 -->
 
-## Unreleased
+## v0.0.2
 
 - [Added] Add `demotape completion` command to generate shell completions.
 
