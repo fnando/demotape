@@ -10,12 +10,12 @@ class WaitUntilTest < Minitest::Test
     assert_equal "line 10", cmd.args
   end
 
-  test "accepts WaitUntil with timeout" do
+  test "accepts WaitUntil with duration" do
     cmd = parse("WaitUntil@30s /Done!/")[0]
 
     assert_equal "WaitUntil", cmd.type
     assert_equal "Done!", cmd.args
-    assert_equal "30s", cmd.options[:timeout]
+    assert_equal "30s", cmd.options[:duration]
   end
 
   test "fails with invalid regex" do

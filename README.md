@@ -545,22 +545,19 @@ Set loop false
 
 ### Modifiers
 
-#### Speed Modifier (@)
+#### Duration Modifier (@)
 
-Controls typing speed for Type commands and key presses:
+Controls duration for various commands. For Type commands and key presses, it
+sets the typing speed. For WaitUntil commands, it sets the timeout:
 
 ```demotape
+# Typing speed
 Type@100ms "text"
 Enter@500ms
 Ctrl+C@1s
 Backspace@50ms 5
-```
 
-#### Timeout Modifier (@)
-
-Sets timeout for WaitUntil commands:
-
-```demotape
+# Timeout for WaitUntil
 WaitUntil@5s /pattern/
 WaitUntil@30s /ready/
 ```

@@ -27,6 +27,6 @@ class TypeTest < Minitest::Test
     assert_equal 1, commands.size
     assert_equal "Type", commands[0].type
     assert_equal "ls -1", commands[0].args
-    assert_equal({speed: "30ms"}, commands[0].options)
+    assert_equal({duration: "30ms"}, commands[0].options)
   end
 end

@@ -519,7 +519,7 @@ module DemoTape
     end
 
     def run_wait_until(command)
-      timeout = Duration.parse(command.options.fetch(:timeout, 15))
+      timeout = Duration.parse(command.options.fetch(:duration, 15))
       tick = 0.02
 
       curr_line = read_state(:term_current_line)
@@ -569,7 +569,7 @@ module DemoTape
 
     def run_type(command)
       speed = Duration.parse(
-        command.options.fetch(:speed, options.typing_speed)
+        command.options.fetch(:duration, options.typing_speed)
       )
 
       text_size = command.args.chars.count
@@ -619,7 +619,7 @@ module DemoTape
 
     def run_type_key(command)
       speed = Duration.parse(
-        command.options.fetch(:speed, options.typing_speed)
+        command.options.fetch(:duration, options.typing_speed)
       )
 
       command.options.fetch(:count, 1).times do

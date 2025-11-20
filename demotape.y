@@ -151,7 +151,7 @@ rule
            }
          | IDENTIFIER AT duration SPACE string {
              @command_start_index = @token_index - 6
-             speed_index = @token_index - 3  # TIME_UNIT position
+             duration_index = @token_index - 3  # TIME_UNIT position
 
              tokens = [
                make_token(:identifier, val[0], @token_index - 6),
@@ -161,13 +161,13 @@ rule
                make_token(:string, val[4], @token_index - 1)
              ]
 
-             cmd = DemoTape::Command.new(val[0], val[4], speed: val[2])
+             cmd = DemoTape::Command.new(val[0], val[4], duration: val[2])
              cmd.tokens = tokens
-             result = attach_location(cmd, speed_index: speed_index).prepare!
+             result = attach_location(cmd, duration_index:).prepare!
            }
          | IDENTIFIER AT duration SPACE NUMBER {
              @command_start_index = @token_index - 6
-             speed_index = @token_index - 3  # TIME_UNIT position
+             duration_index = @token_index - 3  # TIME_UNIT position
 
              tokens = [
                make_token(:identifier, val[0], @token_index - 6),
@@ -177,13 +177,13 @@ rule
                make_token(:number, val[4], @token_index - 1)
              ]
 
-             cmd = DemoTape::Command.new(val[0], "", speed: val[2], count: val[4])
+             cmd = DemoTape::Command.new(val[0], "", duration: val[2], count: val[4])
              cmd.tokens = tokens
-             result = attach_location(cmd, speed_index: speed_index).prepare!
+             result = attach_location(cmd, duration_index:).prepare!
            }
          | IDENTIFIER AT NUMBER SPACE NUMBER {
              @command_start_index = @token_index - 5
-             speed_index = @token_index - 3
+             duration_index = @token_index - 3
 
              tokens = [
                make_token(:identifier, val[0], @token_index - 5),
@@ -193,13 +193,13 @@ rule
                make_token(:number, val[4], @token_index - 1)
              ]
 
-             cmd = DemoTape::Command.new(val[0], "", speed: "#{val[2]}s", count: val[4])
+             cmd = DemoTape::Command.new(val[0], "", duration: "#{val[2]}s", count: val[4])
              cmd.tokens = tokens
-             result = attach_location(cmd, speed_index: speed_index).prepare!
+             result = attach_location(cmd, duration_index:).prepare!
            }
          | IDENTIFIER AT NUMBER SPACE string {
              @command_start_index = @token_index - 5
-             speed_index = @token_index - 3
+             duration_index = @token_index - 3
 
              tokens = [
                make_token(:identifier, val[0], @token_index - 5),
@@ -209,13 +209,13 @@ rule
                make_token(:string, val[4], @token_index - 1)
              ]
 
-             cmd = DemoTape::Command.new(val[0], val[4], speed: "#{val[2]}s")
+             cmd = DemoTape::Command.new(val[0], val[4], duration: "#{val[2]}s")
              cmd.tokens = tokens
-             result = attach_location(cmd, speed_index: speed_index).prepare!
+             result = attach_location(cmd, duration_index:).prepare!
            }
          | IDENTIFIER AT NUMBER {
              @command_start_index = @token_index - 3
-             speed_index = @token_index - 1
+             duration_index = @token_index - 1
 
              tokens = [
                make_token(:identifier, val[0], @token_index - 3),
@@ -223,13 +223,13 @@ rule
                make_token(:number, val[2], @token_index - 1)
              ]
 
-             cmd = DemoTape::Command.new(val[0], "", speed: "#{val[2]}s")
+             cmd = DemoTape::Command.new(val[0], "", duration: "#{val[2]}s")
              cmd.tokens = tokens
-             result = attach_location(cmd, speed_index: speed_index).prepare!
+             result = attach_location(cmd, duration_index:).prepare!
            }
          | IDENTIFIER AT duration {
              @command_start_index = @token_index - 4
-             speed_index = @token_index - 1  # TIME_UNIT position
+             duration_index = @token_index - 1  # TIME_UNIT position
 
              tokens = [
                make_token(:identifier, val[0], @token_index - 4),
@@ -237,13 +237,13 @@ rule
                make_token(:duration, val[2], @token_index - 2)
              ]
 
-             cmd = DemoTape::Command.new(val[0], "", speed: val[2])
+             cmd = DemoTape::Command.new(val[0], "", duration: val[2])
              cmd.tokens = tokens
-             result = attach_location(cmd, speed_index: speed_index).prepare!
+             result = attach_location(cmd, duration_index:).prepare!
            }
          | IDENTIFIER AT duration SPACE REGEX {
              @command_start_index = @token_index - 6
-             timeout_index = @token_index - 3  # TIME_UNIT position
+             duration_index = @token_index - 3  # TIME_UNIT position
              regex_index = @token_index - 1
 
              begin
@@ -264,9 +264,9 @@ rule
                make_token(:regex, val[4], regex_index)
              ]
 
-             cmd = DemoTape::Command.new(val[0], val[4], timeout: val[2])
+             cmd = DemoTape::Command.new(val[0], val[4], duration: val[2])
              cmd.tokens = tokens
-             result = attach_location(cmd, timeout_index: timeout_index).prepare!
+             result = attach_location(cmd, duration_index:).prepare!
            }
          | IDENTIFIER SPACE REGEX {
              @command_start_index = @token_index - 3
@@ -550,7 +550,7 @@ end
     )
   end
 
-  def attach_location(command, duration_index: nil, speed_index: nil, timeout_index: nil)
+  def attach_location(command, duration_index: nil)
     line_info = @lexer.line_map[@command_start_index] || {}
     command.line = line_info[:line]
     command.column = line_info[:column]
@@ -561,16 +561,6 @@ end
     if duration_index
       duration_info = @lexer.line_map[duration_index] || {}
       command.duration_column = duration_info[:column]
-    end
-
-    if speed_index
-      speed_info = @lexer.line_map[speed_index] || {}
-      command.speed_column = speed_info[:column]
-    end
-
-    if timeout_index
-      timeout_info = @lexer.line_map[timeout_index] || {}
-      command.timeout_column = timeout_info[:column]
     end
 
     command

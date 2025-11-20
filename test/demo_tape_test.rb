@@ -31,7 +31,7 @@ class DemoTapeTest < Minitest::Test
     end
 
     expected = [
-      %[Command "Send" does not accept speed option at <unknown>:1:5:],
+      %[Command "Send" does not accept a duration option at <unknown>:1:5:],
       "  Send@10ms",
       "      ^"
     ].join("\n")

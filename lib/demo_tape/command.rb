@@ -88,8 +88,8 @@ module DemoTape
     ].freeze
 
     META_COMMANDS = %w[Group Include Output Require Set].freeze
-    COMMANDS_WITH_SPEED = KEY_MAPPING.keys + %w[Run Type TypeFile].freeze
-    COMMANDS_WITH_TIMEOUT = %w[WaitUntil].freeze
+    COMMANDS_WITH_DURATION = KEY_MAPPING.keys +
+                             %w[Run Type TypeFile WaitUntil].freeze
     VALID_TIME_UNITS = %w[ms s m h].freeze
 
     # Valid keys that can be used in key combos
@@ -107,7 +107,7 @@ module DemoTape
 
     attr_reader :type, :args, :options, :children
     attr_accessor :column, :duration_column, :file, :line, :line_content,
-                  :speed_column, :timeout_column, :tokens
+                  :tokens
 
     def initialize(type, args = "", **options)
       @type = type
@@ -120,8 +120,6 @@ module DemoTape
       @line_content = nil
       @file = nil
       @duration_column = nil
-      @speed_column = nil
-      @timeout_column = nil
       @tokens = []
     end
 
@@ -172,18 +170,6 @@ module DemoTape
       return if VALID_COMMANDS.include?(type)
 
       raise_error "Unknown command: #{type.inspect}"
-    end
-
-    def validate_speed!
-      return unless options[:speed] && !COMMANDS_WITH_SPEED.include?(type)
-
-      raise_error "Command #{type.inspect} does not accept speed option"
-    end
-
-    def validate_timeout!
-      return unless options[:timeout] && !COMMANDS_WITH_TIMEOUT.include?(type)
-
-      raise_error "Command #{type.inspect} does not accept timeout option"
     end
 
     def validate_set_options!
@@ -243,28 +229,23 @@ module DemoTape
     end
 
     private def validate_duration!
-      [args, :duration] => [duration, source] if %w[Sleep Wait].include?(type)
-      [options[:speed], :speed] => [duration, source] if options[:speed]
-      [options[:timeout], :timeout] => [duration, source] if options[:timeout]
+      if !COMMANDS_WITH_DURATION.include?(type) && options[:duration]
+        raise_error "Command #{type.inspect} does not accept a duration option"
+      end
+
+      duration = options[:duration]
 
       return unless duration
 
       unit = duration[/[a-z]+$/i]
       return if VALID_TIME_UNITS.include?(unit)
 
-      col = case source
-            when :speed then speed_column
-            when :timeout then timeout_column
-            else duration_column
-            end
-
-      raise_error "Invalid time unit: #{unit.inspect}", column_override: col
+      raise_error "Invalid time unit: #{unit.inspect}",
+                  column_override: duration_column
     end
 
     def prepare!
       validate_command!
-      validate_speed!
-      validate_timeout!
       validate_children!
       normalize_theme_options!
       validate_set_options!
@@ -320,7 +301,7 @@ module DemoTape
 
       # Calculate pointer position: col is absolute position in original line
       # line_content.strip removes leading spaces, so we need to adjust
-      leading_spaces = line_content[/^\s*/].length
+      leading_spaces = line_content[/^\s*/].size
       pointer_col = col - leading_spaces - 1
       error_msg += "  #{' ' * pointer_col}^"
 
