@@ -30,8 +30,10 @@ module DemoTape
       @ttyd ||= TTYD.new(port: options.port, shell: options.shell)
     end
 
-    def fail_with(message)
-      thor.say_error "\nERROR: #{message}", :red
+    def fail_with(error)
+      error = error.message if error.respond_to?(:message)
+
+      thor.say_error "\nERROR: #{error}", :red
       exit 1
     end
 
@@ -194,7 +196,7 @@ module DemoTape
     rescue StandardError => error
       write_state(:keep_recording, false)
       write_state(:paused, true)
-      fail_with error.message
+      fail_with error
     ensure
       FileUtils.rm_rf(tmp_dir)
       ttyd.stop
@@ -344,6 +346,10 @@ module DemoTape
 
       frame_count = read_state(:current_frame)
       exporter = Exporter.new(tmp_dir:, frame_count:, options:, theme:)
+
+      if frame_count < 5
+        fail_with "Not enough frames captured to generate output video."
+      end
 
       output_paths.each do |path|
         if path.exist? && !options.overwrite

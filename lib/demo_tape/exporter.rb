@@ -214,6 +214,9 @@ module DemoTape
     end
 
     def get_png_dimensions(file_path)
+      return [0, 0] unless file_path
+      return [0, 0] unless File.file?(file_path)
+
       File.open(file_path, "rb") do |f|
         f.read(8)  # Skip PNG signature
         f.read(4)  # Skip chunk length
