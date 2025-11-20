@@ -3,7 +3,7 @@ Send "autoload -Uz compinit && compinit\n"
 Clear
 Resume
 
-Run@5s "bat lib/demo_tape/cli.rb --line-range=160:173"
+Run@10s "bat lib/demo_tape/cli.rb --line-range=168:181"
 
 Type "q"
 Run@1s "clear"

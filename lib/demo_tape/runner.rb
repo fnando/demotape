@@ -611,7 +611,7 @@ module DemoTape
         "Just a quick wait…"
       ])
 
-      sleep(Duration.parse(command.args))
+      sleep(Duration.parse(command.options.fetch(:duration, 1)))
 
       spinner.stop
     end
@@ -698,7 +698,8 @@ module DemoTape
       run_type(Command.new("Type", command.args))
       run_wait(Command.new("Wait", "", duration: options.run_enter_delay))
       send_keys(:enter)
-      run_wait(Command.new("Wait", "", duration: options.run_sleep))
+      wait_duration = command.options.fetch(:duration, options.run_sleep)
+      run_wait(Command.new("Wait", "", duration: wait_duration))
     end
 
     def run_type_file(command)
