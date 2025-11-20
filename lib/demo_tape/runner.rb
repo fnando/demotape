@@ -73,8 +73,34 @@ module DemoTape
       commands.select(&:meta?)
     end
 
+    def groups
+      @groups ||=
+        commands
+        .select(&:group?)
+        .each_with_object({}) do |command, buffer|
+          buffer[command.args] = command
+        end
+    end
+
     def executable_commands
       commands.reject(&:meta?)
+    end
+
+    def resolve_group_expansions
+      p groups
+
+      @commands = commands.flat_map do |command|
+        next command unless command.group_invocation?
+
+        group = groups[command.type]
+        p [:group, !!group]
+
+        unless group
+          command.raise_error("Undefined group: #{command.type.inspect}")
+        end
+
+        group.children
+      end
     end
 
     def resolve_includes
@@ -152,6 +178,7 @@ module DemoTape
       end
 
       resolve_screenshot_count
+      resolve_group_expansions
       run_meta_commands
       resolve_output_paths
       setup_tmp_dir

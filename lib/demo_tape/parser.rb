@@ -10,7 +10,7 @@ require 'racc/parser.rb'
 module DemoTape
   class Parser < Racc::Parser
 
-module_eval(<<'...end demotape.y/module_eval...', 'demotape.y', 442)
+module_eval(<<'...end demotape.y/module_eval...', 'demotape.y', 513)
   def parse(str, file: "<unknown>")
     @file = file
     @lexer = DemoTape::Lexer.new
@@ -36,6 +36,10 @@ module_eval(<<'...end demotape.y/module_eval...', 'demotape.y', 442)
                   when :regex then Token::Regex
                   when :time_unit then Token::TimeUnit
                   when :operator then Token::Operator
+                  when :space then Token::Space
+                  when :leading_space then Token::LeadingSpace
+                  when :trailing_space then Token::TrailingSpace
+                  when :keyword then Token::Keyword
                   else Token::Base
                   end
 
@@ -93,116 +97,180 @@ module_eval(<<'...end demotape.y/module_eval...', 'demotape.y', 442)
 ##### State transition tables begin ###
 
 racc_action_table = [
-    37,    21,    18,    19,    40,    20,    38,    24,    25,    34,
-    24,    25,    43,     4,    44,    45,    24,    25,     6,    24,
-    25,    10,     4,    12,    47,    11,    49,    34,    13,    48,
-    14,    28,    31,    29,    32,     9,    15,     9,    17,    27,
-    30,    33,    34,    35,    36,    50,    51,    52,    53,    54,
-    55,    56,    57,    58,    59,    60 ]
+   -51,    98,    99,    97,    79,    51,    61,    52,    53,    62,
+    54,     8,    57,    58,    77,    77,    87,    84,    15,    85,
+     4,     5,     7,    57,    58,    19,   -17,    10,    11,     7,
+    12,    13,     7,   -17,    35,    21,   -17,    90,    37,    91,
+    36,    57,    58,    92,    34,    38,     7,    57,    58,    39,
+    64,    29,    30,    65,   -49,    98,    99,    97,   -48,    98,
+    99,    97,    47,    19,     7,    98,    99,    97,    98,    99,
+    97,    98,    99,    97,    29,    30,    29,    30,    29,    30,
+    29,    30,    29,    30,    70,    19,    29,    30,    29,    30,
+    29,    30,    29,    30,    29,    30,    24,    25,    19,    44,
+    45,    19,    50,    60,    63,    66,    67,    68,    69,    73,
+    76,    77,    78,    82,    83,    94,    95,   101,   102,   104,
+   106,   108,   110,   112 ]
 
 racc_action_check = [
-    27,    10,    10,    10,    35,    10,    35,    10,    10,    27,
-    35,    35,    36,     0,    36,    37,    36,    36,     1,    37,
-    37,     4,     2,     4,    38,     4,    47,    38,     5,    47,
-     5,    12,    14,    12,    14,     3,     6,     7,     8,    11,
-    13,    16,    19,    21,    26,    48,    49,    50,    51,    52,
-    53,    54,    55,    57,    58,    59 ]
+    85,    85,    85,    85,    60,    35,    37,    35,    35,    37,
+    35,     1,    35,    35,    85,    60,    76,    76,     4,    76,
+     0,     0,     0,    76,    76,     6,     0,     2,     2,     2,
+     3,     3,     3,     2,    19,     8,     3,    78,    19,    78,
+    19,    78,    78,    79,    18,    20,    18,    79,    79,    20,
+    39,    16,    16,    39,   104,   104,   104,   104,   108,   108,
+   108,   108,    32,     9,    32,   102,   102,   102,   106,   106,
+   106,   110,   110,   110,    17,    17,    22,    22,    23,    23,
+    26,    26,    27,    27,    46,    46,    48,    48,    49,    49,
+    71,    71,    72,    72,    84,    84,    10,    12,    14,    28,
+    31,    33,    34,    36,    38,    40,    41,    42,    43,    47,
+    51,    53,    59,    74,    75,    80,    81,    96,   100,   103,
+   105,   107,   109,   111 ]
 
 racc_action_pointer = [
-     9,    18,    18,    32,    18,    25,    36,    34,    36,   nil,
-    -3,    33,    27,    34,    28,   nil,    39,   nil,   nil,    30,
-   nil,    40,   nil,   nil,   nil,   nil,    41,    -3,   nil,   nil,
-   nil,   nil,   nil,   nil,   nil,     0,     6,     9,    15,   nil,
-   nil,   nil,   nil,   nil,   nil,   nil,   nil,    23,    36,    40,
-    41,    39,    40,    47,    45,    46,   nil,    44,    51,    49,
-   nil ]
+    18,    11,    25,    28,    15,   nil,    17,   nil,    35,    55,
+    93,   nil,    94,   nil,    90,   nil,    46,    69,    42,    28,
+    39,   nil,    71,    73,   nil,   nil,    75,    77,    96,   nil,
+   nil,    97,    60,    93,    99,    -3,    92,    -2,    93,    42,
+   102,   103,   104,   105,   nil,   nil,    77,   106,    81,    83,
+   nil,   104,   nil,    94,   nil,   nil,   nil,   nil,   nil,   106,
+    -2,   nil,   nil,   nil,   nil,   nil,   nil,   nil,   nil,   nil,
+   nil,    85,    87,   nil,   110,   111,     8,   nil,    26,    32,
+   112,   113,   nil,   nil,    89,    -3,   nil,   nil,   nil,   nil,
+   nil,   nil,   nil,   nil,   nil,   nil,   114,   nil,   nil,   nil,
+   104,   nil,    61,   108,    51,   106,    64,   110,    55,   108,
+    67,   112,   nil ]
 
 racc_action_default = [
-    -2,   -39,    -1,    -6,   -31,    -9,   -39,    -6,   -39,    -5,
-   -39,   -39,   -39,   -39,   -39,    61,   -39,    -3,    -7,   -10,
-   -18,   -39,   -29,   -30,   -36,   -37,   -16,   -15,   -32,   -33,
-    -8,   -34,   -35,    -4,   -38,   -39,   -39,   -39,   -26,   -25,
-   -27,   -28,   -11,   -12,   -17,   -13,   -14,   -39,   -23,   -39,
-   -39,   -24,   -21,   -39,   -39,   -39,   -19,   -22,   -39,   -39,
-   -20 ]
+    -3,   -64,    -1,    -2,   -64,    -6,   -64,   -16,   -64,   -64,
+   -64,   -15,   -64,    -7,   -64,    -4,   -20,   -20,   -17,   -56,
+   -37,   113,   -20,   -20,   -14,    -5,   -20,   -20,   -64,   -18,
+   -19,   -64,   -17,   -64,   -64,   -64,   -64,   -64,   -64,   -64,
+   -64,   -64,   -64,   -64,    -8,   -10,   -64,   -64,   -20,   -20,
+   -31,   -64,   -35,   -38,   -46,   -54,   -55,   -61,   -62,   -44,
+   -43,   -57,   -58,   -36,   -59,   -60,    -9,   -11,   -12,   -13,
+   -25,   -20,   -20,   -32,   -64,   -64,   -64,   -63,   -64,   -64,
+   -64,   -64,   -27,   -29,   -20,   -24,   -50,   -52,   -53,   -39,
+   -40,   -45,   -41,   -42,   -28,   -30,   -64,   -21,   -22,   -23,
+   -64,   -26,   -24,   -64,   -24,   -64,   -24,   -64,   -24,   -64,
+   -24,   -64,   -47 ]
 
 racc_goto_table = [
-    22,     8,     1,    23,    26,    16,     3,     2,     7,   nil,
-   nil,   nil,   nil,   nil,   nil,   nil,   nil,   nil,   nil,   nil,
-   nil,   nil,   nil,   nil,   nil,    41,    42,    46,    39 ]
+    28,    31,    55,    56,    59,     1,    40,    41,     2,    16,
+    42,    43,    22,    17,     3,    32,    23,    26,   nil,   nil,
+     6,    27,     9,    14,   nil,   nil,   nil,   nil,   nil,   nil,
+   nil,   nil,    74,    75,   nil,   nil,    48,   nil,    33,   nil,
+    49,   100,   nil,    88,    86,    89,    93,   nil,   nil,    71,
+   nil,   nil,    46,    72,   nil,    80,    81,   nil,   103,   nil,
+   105,   nil,   107,   nil,   109,   nil,   111,   nil,    96 ]
 
 racc_goto_check = [
-     7,     4,     1,     6,     6,     4,     3,     2,     3,   nil,
-   nil,   nil,   nil,   nil,   nil,   nil,   nil,   nil,   nil,   nil,
-   nil,   nil,   nil,   nil,   nil,     7,     7,     7,     6 ]
+     6,     6,    13,    12,    12,     1,     6,     6,     2,     5,
+     6,     6,     5,     7,     3,    10,     7,     5,   nil,   nil,
+     4,     7,     4,     4,   nil,   nil,   nil,   nil,   nil,   nil,
+   nil,   nil,     6,     6,   nil,   nil,     5,   nil,     4,   nil,
+     7,     8,   nil,    13,    12,    13,    13,   nil,   nil,     5,
+   nil,   nil,     4,     7,   nil,     6,     6,   nil,     8,   nil,
+     8,   nil,     8,   nil,     8,   nil,     8,   nil,     6 ]
 
 racc_goto_pointer = [
-   nil,     2,     7,     6,    -2,   nil,    -7,   -10 ]
+   nil,     5,     8,    14,    20,     3,   -16,     7,   -44,   nil,
+    -3,   nil,   -32,   -33 ]
 
 racc_goto_default = [
-   nil,   nil,   nil,   nil,   nil,     5,   nil,   nil ]
+   nil,   nil,   nil,   nil,   nil,   nil,   nil,   nil,   nil,    18,
+   nil,    20,   nil,   nil ]
 
 racc_reduce_table = [
   0, 0, :racc_error,
-  1, 14, :_reduce_1,
-  0, 14, :_reduce_2,
-  3, 15, :_reduce_3,
-  4, 15, :_reduce_4,
-  1, 17, :_reduce_5,
-  0, 17, :_reduce_6,
-  3, 16, :_reduce_7,
-  3, 16, :_reduce_8,
-  1, 16, :_reduce_9,
-  3, 16, :_reduce_10,
-  5, 16, :_reduce_11,
-  5, 16, :_reduce_12,
-  5, 16, :_reduce_13,
-  5, 16, :_reduce_14,
-  3, 16, :_reduce_15,
-  3, 16, :_reduce_16,
-  5, 16, :_reduce_17,
-  3, 16, :_reduce_18,
-  11, 16, :_reduce_19,
-  14, 16, :_reduce_20,
-  9, 16, :_reduce_21,
-  11, 16, :_reduce_22,
-  7, 16, :_reduce_23,
-  8, 16, :_reduce_24,
-  5, 16, :_reduce_25,
-  5, 16, :_reduce_26,
-  5, 16, :_reduce_27,
-  5, 16, :_reduce_28,
-  3, 16, :_reduce_29,
-  3, 16, :_reduce_30,
-  1, 16, :_reduce_31,
-  3, 18, :_reduce_32,
-  3, 18, :_reduce_33,
-  3, 18, :_reduce_34,
-  3, 18, :_reduce_35,
-  1, 20, :_reduce_36,
-  1, 20, :_reduce_37,
-  2, 19, :_reduce_38 ]
+  1, 19, :_reduce_1,
+  1, 19, :_reduce_2,
+  0, 19, :_reduce_3,
+  2, 21, :_reduce_4,
+  3, 21, :_reduce_5,
+  1, 21, :_reduce_6,
+  2, 21, :_reduce_7,
+  4, 20, :_reduce_8,
+  5, 20, :_reduce_9,
+  4, 20, :_reduce_10,
+  5, 20, :_reduce_11,
+  5, 20, :_reduce_12,
+  5, 20, :_reduce_13,
+  3, 20, :_reduce_14,
+  2, 20, :_reduce_15,
+  1, 22, :_reduce_16,
+  0, 22, :_reduce_17,
+  1, 24, :_reduce_18,
+  1, 24, :_reduce_19,
+  0, 24, :_reduce_20,
+  1, 26, :_reduce_21,
+  1, 26, :_reduce_22,
+  1, 26, :_reduce_23,
+  0, 26, :_reduce_24,
+  4, 25, :_reduce_25,
+  7, 27, :_reduce_26,
+  4, 28, :_reduce_27,
+  5, 28, :_reduce_28,
+  4, 28, :_reduce_29,
+  5, 28, :_reduce_30,
+  2, 28, :_reduce_31,
+  3, 28, :_reduce_32,
+  1, 24, :_reduce_33,
+  0, 24, :_reduce_34,
+  3, 23, :_reduce_35,
+  3, 23, :_reduce_36,
+  1, 23, :_reduce_37,
+  3, 23, :_reduce_38,
+  5, 23, :_reduce_39,
+  5, 23, :_reduce_40,
+  5, 23, :_reduce_41,
+  5, 23, :_reduce_42,
+  3, 23, :_reduce_43,
+  3, 23, :_reduce_44,
+  5, 23, :_reduce_45,
+  3, 23, :_reduce_46,
+  17, 23, :_reduce_47,
+  13, 23, :_reduce_48,
+  9, 23, :_reduce_49,
+  5, 23, :_reduce_50,
+  5, 23, :_reduce_51,
+  5, 23, :_reduce_52,
+  5, 23, :_reduce_53,
+  3, 23, :_reduce_54,
+  3, 23, :_reduce_55,
+  1, 23, :_reduce_56,
+  3, 29, :_reduce_57,
+  3, 29, :_reduce_58,
+  3, 29, :_reduce_59,
+  3, 29, :_reduce_60,
+  1, 31, :_reduce_61,
+  1, 31, :_reduce_62,
+  2, 30, :_reduce_63 ]
 
-racc_reduce_n = 39
+racc_reduce_n = 64
 
-racc_shift_n = 61
+racc_shift_n = 113
 
 racc_token_table = {
   false => 0,
   :error => 1,
-  :NEWLINE => 2,
-  :SPACE => 3,
-  :IDENTIFIER => 4,
-  :PLUS => 5,
-  :NUMBER => 6,
-  :AT => 7,
-  :REGEX => 8,
-  :COMMA => 9,
-  :STRING => 10,
-  :WORD => 11,
-  :TIME_UNIT => 12 }
+  :COMMENT => 2,
+  :NEWLINE => 3,
+  :LEADING_SPACE => 4,
+  :TRAILING_SPACE => 5,
+  :SPACE => 6,
+  :END => 7,
+  :IDENTIFIER => 8,
+  :DO => 9,
+  :PLUS => 10,
+  :NUMBER => 11,
+  :AT => 12,
+  :REGEX => 13,
+  :COMMA => 14,
+  :STRING => 15,
+  :WORD => 16,
+  :TIME_UNIT => 17 }
 
-racc_nt_base = 13
+racc_nt_base = 18
 
 racc_use_result_var = true
 
@@ -226,9 +294,14 @@ Ractor.make_shareable(Racc_arg) if defined?(Ractor)
 Racc_token_to_s_table = [
   "$end",
   "error",
+  "COMMENT",
   "NEWLINE",
+  "LEADING_SPACE",
+  "TRAILING_SPACE",
   "SPACE",
+  "END",
   "IDENTIFIER",
+  "DO",
   "PLUS",
   "NUMBER",
   "AT",
@@ -240,8 +313,14 @@ Racc_token_to_s_table = [
   "$start",
   "tape",
   "commands",
+  "metadata",
+  "leading_space",
   "command",
   "trailing_space",
+  "block",
+  "optional_space",
+  "block_start",
+  "block_commands",
   "key_combo",
   "duration",
   "string" ]
@@ -267,36 +346,279 @@ module_eval(<<'.,.,', 'demotape.y', 3)
   end
 .,.,
 
-module_eval(<<'.,.,', 'demotape.y', 5)
+module_eval(<<'.,.,', 'demotape.y', 4)
   def _reduce_3(val, _values, result)
-     result = [val[0]]
+     result = []
     result
   end
 .,.,
 
 module_eval(<<'.,.,', 'demotape.y', 6)
   def _reduce_4(val, _values, result)
-     result = val[0] << val[1]
+     result = nil
     result
   end
 .,.,
 
-module_eval(<<'.,.,', 'demotape.y', 8)
+module_eval(<<'.,.,', 'demotape.y', 7)
   def _reduce_5(val, _values, result)
      result = nil
     result
   end
 .,.,
 
-module_eval(<<'.,.,', 'demotape.y', 9)
+module_eval(<<'.,.,', 'demotape.y', 8)
   def _reduce_6(val, _values, result)
      result = nil
     result
   end
 .,.,
 
-module_eval(<<'.,.,', 'demotape.y', 12)
+module_eval(<<'.,.,', 'demotape.y', 9)
   def _reduce_7(val, _values, result)
+     result = nil
+    result
+  end
+.,.,
+
+module_eval(<<'.,.,', 'demotape.y', 11)
+  def _reduce_8(val, _values, result)
+     result = [val[1]]
+    result
+  end
+.,.,
+
+module_eval(<<'.,.,', 'demotape.y', 12)
+  def _reduce_9(val, _values, result)
+     result = val[0] << val[2]
+    result
+  end
+.,.,
+
+module_eval(<<'.,.,', 'demotape.y', 13)
+  def _reduce_10(val, _values, result)
+     result = [val[1]]
+    result
+  end
+.,.,
+
+module_eval(<<'.,.,', 'demotape.y', 14)
+  def _reduce_11(val, _values, result)
+     result = val[0] << val[2]
+    result
+  end
+.,.,
+
+module_eval(<<'.,.,', 'demotape.y', 15)
+  def _reduce_12(val, _values, result)
+     result = [val[2]]
+    result
+  end
+.,.,
+
+module_eval(<<'.,.,', 'demotape.y', 16)
+  def _reduce_13(val, _values, result)
+     result = [val[2]]
+    result
+  end
+.,.,
+
+module_eval(<<'.,.,', 'demotape.y', 17)
+  def _reduce_14(val, _values, result)
+     result = val[0]
+    result
+  end
+.,.,
+
+module_eval(<<'.,.,', 'demotape.y', 18)
+  def _reduce_15(val, _values, result)
+     result = val[0]
+    result
+  end
+.,.,
+
+module_eval(<<'.,.,', 'demotape.y', 20)
+  def _reduce_16(val, _values, result)
+     result = nil
+    result
+  end
+.,.,
+
+module_eval(<<'.,.,', 'demotape.y', 21)
+  def _reduce_17(val, _values, result)
+     result = nil
+    result
+  end
+.,.,
+
+module_eval(<<'.,.,', 'demotape.y', 23)
+  def _reduce_18(val, _values, result)
+     result = nil
+    result
+  end
+.,.,
+
+module_eval(<<'.,.,', 'demotape.y', 24)
+  def _reduce_19(val, _values, result)
+     result = nil
+    result
+  end
+.,.,
+
+module_eval(<<'.,.,', 'demotape.y', 25)
+  def _reduce_20(val, _values, result)
+     result = nil
+    result
+  end
+.,.,
+
+module_eval(<<'.,.,', 'demotape.y', 27)
+  def _reduce_21(val, _values, result)
+     result = val[0]
+    result
+  end
+.,.,
+
+module_eval(<<'.,.,', 'demotape.y', 28)
+  def _reduce_22(val, _values, result)
+     result = val[0]
+    result
+  end
+.,.,
+
+module_eval(<<'.,.,', 'demotape.y', 29)
+  def _reduce_23(val, _values, result)
+     result = val[0]
+    result
+  end
+.,.,
+
+module_eval(<<'.,.,', 'demotape.y', 30)
+  def _reduce_24(val, _values, result)
+     result = nil
+    result
+  end
+.,.,
+
+module_eval(<<'.,.,', 'demotape.y', 33)
+  def _reduce_25(val, _values, result)
+               cmd = val[0]
+           cmd.children.replace(val[1])
+           result = cmd.prepare!
+
+    result
+  end
+.,.,
+
+module_eval(<<'.,.,', 'demotape.y', 39)
+  def _reduce_26(val, _values, result)
+               # When this rule is being reduced:
+           # val[0] = first IDENTIFIER value
+           # val[1] = first SPACE value
+           # val[2] = second IDENTIFIER value
+           # val[3] = second SPACE value
+           # val[4] = DO value
+           # val[5] = trailing_space (nil or SPACE value)
+           # val[6] = NEWLINE value
+           
+           # @token_index is AFTER consuming NEWLINE
+           # We need to count backwards to find each token's position
+           
+           # trailing_space can be 0 or 1 token
+           trailing_consumed = val[5].nil? ? 0 : 1
+           
+           # Working backwards from @token_index:
+           # @token_index points to NEXT token (after NEWLINE)
+           # @token_index - 1 = NEWLINE
+           # @token_index - 2 = trailing_space (if present) or DO (if not)
+           # So: @token_index - 1 - trailing_consumed = DO
+           #     @token_index - 2 - trailing_consumed = SPACE before DO
+           #     @token_index - 3 - trailing_consumed = second IDENTIFIER
+           #     @token_index - 4 - trailing_consumed = first SPACE
+           #     @token_index - 5 - trailing_consumed = first IDENTIFIER
+           
+           identifier_index = @token_index - 6 - trailing_consumed
+           space1_index = @token_index - 5 - trailing_consumed
+           name_index = @token_index - 4 - trailing_consumed
+           space2_index = @token_index - 3 - trailing_consumed
+           do_index = @token_index - 2 - trailing_consumed
+           
+           @command_start_index = identifier_index
+           
+           tokens = [
+             make_token(:identifier, val[0], identifier_index),
+             make_token(:space, val[1], space1_index),
+             make_token(:identifier, val[2], name_index),
+             make_token(:space, val[3], space2_index),
+             make_token(:keyword, val[4], do_index)
+           ]
+
+           cmd = DemoTape::Command.new(val[0], val[2], children: [])
+           cmd.tokens = tokens
+           result = attach_location(cmd)
+
+    result
+  end
+.,.,
+
+module_eval(<<'.,.,', 'demotape.y', 85)
+  def _reduce_27(val, _values, result)
+     result = [val[1]]
+    result
+  end
+.,.,
+
+module_eval(<<'.,.,', 'demotape.y', 86)
+  def _reduce_28(val, _values, result)
+     result = val[0] << val[2]
+    result
+  end
+.,.,
+
+module_eval(<<'.,.,', 'demotape.y', 87)
+  def _reduce_29(val, _values, result)
+     result = [val[1]]
+    result
+  end
+.,.,
+
+module_eval(<<'.,.,', 'demotape.y', 88)
+  def _reduce_30(val, _values, result)
+     result = val[0] << val[2]
+    result
+  end
+.,.,
+
+module_eval(<<'.,.,', 'demotape.y', 89)
+  def _reduce_31(val, _values, result)
+     result = []
+    result
+  end
+.,.,
+
+module_eval(<<'.,.,', 'demotape.y', 90)
+  def _reduce_32(val, _values, result)
+     result = val[0]
+    result
+  end
+.,.,
+
+module_eval(<<'.,.,', 'demotape.y', 92)
+  def _reduce_33(val, _values, result)
+     result = nil
+    result
+  end
+.,.,
+
+module_eval(<<'.,.,', 'demotape.y', 93)
+  def _reduce_34(val, _values, result)
+     result = nil
+    result
+  end
+.,.,
+
+module_eval(<<'.,.,', 'demotape.y', 96)
+  def _reduce_35(val, _values, result)
                  space_index = @token_index - 2
              line_info = @lexer.line_map[space_index] || {}
              error_msg = "Unexpected token \"SPACE\" at #{@file}:#{line_info[:line]}:#{line_info[:column]}:\n"
@@ -308,14 +630,17 @@ module_eval(<<'.,.,', 'demotape.y', 12)
   end
 .,.,
 
-module_eval(<<'.,.,', 'demotape.y', 20)
-  def _reduce_8(val, _values, result)
+module_eval(<<'.,.,', 'demotape.y', 104)
+  def _reduce_36(val, _values, result)
                  @command_start_index = @last_key_index
              keys = val[0][:keys]
              key_tokens = val[0][:tokens]
              command_name = keys.shift
 
-             tokens = key_tokens + [make_token(:number, val[2], @token_index - 1)]
+             tokens = key_tokens + [
+               make_token(:space, val[1], @token_index - 2),
+               make_token(:number, val[2], @token_index - 1)
+             ]
 
              cmd = DemoTape::Command.new(command_name, "", keys:, count: val[2])
              cmd.tokens = tokens
@@ -325,8 +650,8 @@ module_eval(<<'.,.,', 'demotape.y', 20)
   end
 .,.,
 
-module_eval(<<'.,.,', 'demotape.y', 32)
-  def _reduce_9(val, _values, result)
+module_eval(<<'.,.,', 'demotape.y', 119)
+  def _reduce_37(val, _values, result)
                  @command_start_index = @last_key_index
              keys = val[0][:keys]
              key_tokens = val[0][:tokens]
@@ -340,13 +665,15 @@ module_eval(<<'.,.,', 'demotape.y', 32)
   end
 .,.,
 
-module_eval(<<'.,.,', 'demotape.y', 42)
-  def _reduce_10(val, _values, result)
+module_eval(<<'.,.,', 'demotape.y', 129)
+  def _reduce_38(val, _values, result)
                  @command_start_index = @token_index - 4
              duration_index = @token_index - 2
+             space_index = @token_index - 3
 
              tokens = [
                make_token(:identifier, val[0], @token_index - 4),
+               make_token(:space, val[1], space_index),
                make_token(:number, val[2], @token_index - 2)
              ]
 
@@ -366,8 +693,8 @@ module_eval(<<'.,.,', 'demotape.y', 42)
   end
 .,.,
 
-module_eval(<<'.,.,', 'demotape.y', 63)
-  def _reduce_11(val, _values, result)
+module_eval(<<'.,.,', 'demotape.y', 152)
+  def _reduce_39(val, _values, result)
                  @command_start_index = @token_index - 6
              speed_index = @token_index - 3  # TIME_UNIT position
 
@@ -375,6 +702,7 @@ module_eval(<<'.,.,', 'demotape.y', 63)
                make_token(:identifier, val[0], @token_index - 6),
                make_token(:operator, "@", @token_index - 5),
                make_token(:duration, val[2], @token_index - 4),
+               make_token(:space, val[3], @token_index - 2),
                make_token(:string, val[4], @token_index - 1)
              ]
 
@@ -386,8 +714,8 @@ module_eval(<<'.,.,', 'demotape.y', 63)
   end
 .,.,
 
-module_eval(<<'.,.,', 'demotape.y', 78)
-  def _reduce_12(val, _values, result)
+module_eval(<<'.,.,', 'demotape.y', 168)
+  def _reduce_40(val, _values, result)
                  @command_start_index = @token_index - 6
              speed_index = @token_index - 3  # TIME_UNIT position
 
@@ -395,6 +723,7 @@ module_eval(<<'.,.,', 'demotape.y', 78)
                make_token(:identifier, val[0], @token_index - 6),
                make_token(:operator, "@", @token_index - 5),
                make_token(:duration, val[2], @token_index - 4),
+               make_token(:space, val[3], @token_index - 2),
                make_token(:number, val[4], @token_index - 1)
              ]
 
@@ -406,8 +735,8 @@ module_eval(<<'.,.,', 'demotape.y', 78)
   end
 .,.,
 
-module_eval(<<'.,.,', 'demotape.y', 93)
-  def _reduce_13(val, _values, result)
+module_eval(<<'.,.,', 'demotape.y', 184)
+  def _reduce_41(val, _values, result)
                  @command_start_index = @token_index - 5
              speed_index = @token_index - 3
 
@@ -415,6 +744,7 @@ module_eval(<<'.,.,', 'demotape.y', 93)
                make_token(:identifier, val[0], @token_index - 5),
                make_token(:operator, "@", @token_index - 4),
                make_token(:number, val[2], @token_index - 3),
+               make_token(:space, val[3], @token_index - 2),
                make_token(:number, val[4], @token_index - 1)
              ]
 
@@ -426,8 +756,8 @@ module_eval(<<'.,.,', 'demotape.y', 93)
   end
 .,.,
 
-module_eval(<<'.,.,', 'demotape.y', 108)
-  def _reduce_14(val, _values, result)
+module_eval(<<'.,.,', 'demotape.y', 200)
+  def _reduce_42(val, _values, result)
                  @command_start_index = @token_index - 5
              speed_index = @token_index - 3
 
@@ -435,6 +765,7 @@ module_eval(<<'.,.,', 'demotape.y', 108)
                make_token(:identifier, val[0], @token_index - 5),
                make_token(:operator, "@", @token_index - 4),
                make_token(:number, val[2], @token_index - 3),
+               make_token(:space, val[3], @token_index - 2),
                make_token(:string, val[4], @token_index - 1)
              ]
 
@@ -446,8 +777,8 @@ module_eval(<<'.,.,', 'demotape.y', 108)
   end
 .,.,
 
-module_eval(<<'.,.,', 'demotape.y', 123)
-  def _reduce_15(val, _values, result)
+module_eval(<<'.,.,', 'demotape.y', 216)
+  def _reduce_43(val, _values, result)
                  @command_start_index = @token_index - 3
              speed_index = @token_index - 1
 
@@ -465,8 +796,8 @@ module_eval(<<'.,.,', 'demotape.y', 123)
   end
 .,.,
 
-module_eval(<<'.,.,', 'demotape.y', 137)
-  def _reduce_16(val, _values, result)
+module_eval(<<'.,.,', 'demotape.y', 230)
+  def _reduce_44(val, _values, result)
                  @command_start_index = @token_index - 4
              speed_index = @token_index - 1  # TIME_UNIT position
 
@@ -484,8 +815,8 @@ module_eval(<<'.,.,', 'demotape.y', 137)
   end
 .,.,
 
-module_eval(<<'.,.,', 'demotape.y', 151)
-  def _reduce_17(val, _values, result)
+module_eval(<<'.,.,', 'demotape.y', 244)
+  def _reduce_45(val, _values, result)
                  @command_start_index = @token_index - 6
              timeout_index = @token_index - 3  # TIME_UNIT position
              regex_index = @token_index - 1
@@ -504,6 +835,7 @@ module_eval(<<'.,.,', 'demotape.y', 151)
                make_token(:identifier, val[0], @token_index - 6),
                make_token(:operator, "@", @token_index - 5),
                make_token(:duration, val[2], @token_index - 4),
+               make_token(:space, val[3], @token_index - 2),
                make_token(:regex, val[4], regex_index)
              ]
 
@@ -515,8 +847,8 @@ module_eval(<<'.,.,', 'demotape.y', 151)
   end
 .,.,
 
-module_eval(<<'.,.,', 'demotape.y', 177)
-  def _reduce_18(val, _values, result)
+module_eval(<<'.,.,', 'demotape.y', 271)
+  def _reduce_46(val, _values, result)
                  @command_start_index = @token_index - 3
              regex_index = @token_index - 1
 
@@ -532,6 +864,7 @@ module_eval(<<'.,.,', 'demotape.y', 177)
 
              tokens = [
                make_token(:identifier, val[0], @token_index - 3),
+               make_token(:space, val[1], @token_index - 2),
                make_token(:regex, val[2], regex_index)
              ]
 
@@ -543,91 +876,31 @@ module_eval(<<'.,.,', 'demotape.y', 177)
   end
 .,.,
 
-module_eval(<<'.,.,', 'demotape.y', 200)
-  def _reduce_19(val, _values, result)
-                 @command_start_index = @token_index - 9
-
-             tokens = [
-               make_token(:identifier, val[0], @token_index - 9),
-               make_token(:identifier, val[2], @token_index - 7),
-               make_token(:number, val[4], @token_index - 5),
-               make_token(:operator, ",", @token_index - 4),
-               make_token(:number, val[6], @token_index - 3),
-               make_token(:operator, ",", @token_index - 2),
-               make_token(:number, val[8], @token_index - 1),
-               make_token(:operator, ",", @token_index - 1),
-               make_token(:number, val[10], @token_index - 1)
-             ]
-
-             cmd = DemoTape::Command.new(val[0], [val[4], val[6], val[8], val[10]], option: val[2])
-             cmd.tokens = tokens
-             result = attach_location(cmd).prepare!
-
-    result
-  end
-.,.,
-
-module_eval(<<'.,.,', 'demotape.y', 219)
-  def _reduce_20(val, _values, result)
-                 @command_start_index = @token_index - 13
-
-             tokens = [
-               make_token(:identifier, val[0], @token_index - 13),
-               make_token(:identifier, val[2], @token_index - 11),
-               make_token(:number, val[4], @token_index - 9),
-               make_token(:operator, ",", @token_index - 8),
-               make_token(:number, val[7], @token_index - 6),
-               make_token(:operator, ",", @token_index - 5),
-               make_token(:number, val[10], @token_index - 3),
-               make_token(:operator, ",", @token_index - 2),
-               make_token(:number, val[13], @token_index - 1)
-             ]
-
-             cmd = DemoTape::Command.new(val[0], [val[4], val[7], val[10], val[13]], option: val[2])
-             cmd.tokens = tokens
-             result = attach_location(cmd).prepare!
-
-    result
-  end
-.,.,
-
-module_eval(<<'.,.,', 'demotape.y', 238)
-  def _reduce_21(val, _values, result)
-                 @command_start_index = @token_index - 7
-
-             tokens = [
-               make_token(:identifier, val[0], @token_index - 7),
-               make_token(:identifier, val[2], @token_index - 5),
-               make_token(:number, val[4], @token_index - 3),
-               make_token(:operator, ",", @token_index - 2),
-               make_token(:number, val[6], @token_index - 1),
-               make_token(:operator, ",", @token_index - 1),
-               make_token(:number, val[8], @token_index - 1)
-             ]
-
-             cmd = DemoTape::Command.new(val[0], [val[4], val[6], val[8]], option: val[2])
-             cmd.tokens = tokens
-             result = attach_location(cmd).prepare!
-
-    result
-  end
-.,.,
-
-module_eval(<<'.,.,', 'demotape.y', 255)
-  def _reduce_22(val, _values, result)
+module_eval(<<'.,.,', 'demotape.y', 295)
+  def _reduce_47(val, _values, result)
                  @command_start_index = @token_index - 11
 
-             tokens = [
-               make_token(:identifier, val[0], @token_index - 11),
-               make_token(:identifier, val[2], @token_index - 9),
-               make_token(:number, val[4], @token_index - 7),
-               make_token(:operator, ",", @token_index - 6),
-               make_token(:number, val[7], @token_index - 4),
-               make_token(:operator, ",", @token_index - 3),
-               make_token(:number, val[10], @token_index - 1)
-             ]
+             # Build tokens array - for optional spaces, just create simple tokens
+             tokens = []
+             tokens << make_token(:identifier, val[0], @token_index - 11)
+             tokens << make_token(:space, val[1], @token_index - 10)
+             tokens << make_token(:identifier, val[2], @token_index - 9)
+             tokens << make_token(:space, val[3], @token_index - 8)
+             tokens << make_token(:number, val[4], @token_index - 7)
+             tokens << DemoTape::Token::Space.new(val[5]) if val[5]
+             tokens << DemoTape::Token::Operator.new(",")
+             tokens << DemoTape::Token::Space.new(val[7]) if val[7]
+             tokens << make_token(:number, val[8], @token_index - 5)
+             tokens << DemoTape::Token::Space.new(val[9]) if val[9]
+             tokens << DemoTape::Token::Operator.new(",")
+             tokens << DemoTape::Token::Space.new(val[11]) if val[11]
+             tokens << make_token(:number, val[12], @token_index - 3)
+             tokens << DemoTape::Token::Space.new(val[13]) if val[13]
+             tokens << DemoTape::Token::Operator.new(",")
+             tokens << DemoTape::Token::Space.new(val[15]) if val[15]
+             tokens << make_token(:number, val[16], @token_index - 1)
 
-             cmd = DemoTape::Command.new(val[0], [val[4], val[7], val[10]], option: val[2])
+             cmd = DemoTape::Command.new(val[0], [val[4], val[8], val[12], val[16]], option: val[2])
              cmd.tokens = tokens
              result = attach_location(cmd).prepare!
 
@@ -635,19 +908,26 @@ module_eval(<<'.,.,', 'demotape.y', 255)
   end
 .,.,
 
-module_eval(<<'.,.,', 'demotape.y', 272)
-  def _reduce_23(val, _values, result)
-                 @command_start_index = @token_index - 5
+module_eval(<<'.,.,', 'demotape.y', 322)
+  def _reduce_48(val, _values, result)
+                 @command_start_index = @token_index - 9
 
-             tokens = [
-               make_token(:identifier, val[0], @token_index - 5),
-               make_token(:identifier, val[2], @token_index - 3),
-               make_token(:number, val[4], @token_index - 1),
-               make_token(:operator, ",", @token_index - 1),
-               make_token(:number, val[6], @token_index - 1)
-             ]
+             tokens = []
+             tokens << make_token(:identifier, val[0], @token_index - 9)
+             tokens << make_token(:space, val[1], @token_index - 8)
+             tokens << make_token(:identifier, val[2], @token_index - 7)
+             tokens << make_token(:space, val[3], @token_index - 6)
+             tokens << make_token(:number, val[4], @token_index - 5)
+             tokens << DemoTape::Token::Space.new(val[5]) if val[5]
+             tokens << DemoTape::Token::Operator.new(",")
+             tokens << DemoTape::Token::Space.new(val[7]) if val[7]
+             tokens << make_token(:number, val[8], @token_index - 3)
+             tokens << DemoTape::Token::Space.new(val[9]) if val[9]
+             tokens << DemoTape::Token::Operator.new(",")
+             tokens << DemoTape::Token::Space.new(val[11]) if val[11]
+             tokens << make_token(:number, val[12], @token_index - 1)
 
-             cmd = DemoTape::Command.new(val[0], [val[4], val[6]], option: val[2])
+             cmd = DemoTape::Command.new(val[0], [val[4], val[8], val[12]], option: val[2])
              cmd.tokens = tokens
              result = attach_location(cmd).prepare!
 
@@ -655,19 +935,22 @@ module_eval(<<'.,.,', 'demotape.y', 272)
   end
 .,.,
 
-module_eval(<<'.,.,', 'demotape.y', 287)
-  def _reduce_24(val, _values, result)
-                 @command_start_index = @token_index - 8
+module_eval(<<'.,.,', 'demotape.y', 344)
+  def _reduce_49(val, _values, result)
+                 @command_start_index = @token_index - 7
 
-             tokens = [
-               make_token(:identifier, val[0], @token_index - 8),
-               make_token(:identifier, val[2], @token_index - 6),
-               make_token(:number, val[4], @token_index - 4),
-               make_token(:operator, ",", @token_index - 3),
-               make_token(:number, val[7], @token_index - 1)
-             ]
+             tokens = []
+             tokens << make_token(:identifier, val[0], @token_index - 7)
+             tokens << make_token(:space, val[1], @token_index - 6)
+             tokens << make_token(:identifier, val[2], @token_index - 5)
+             tokens << make_token(:space, val[3], @token_index - 4)
+             tokens << make_token(:number, val[4], @token_index - 3)
+             tokens << DemoTape::Token::Space.new(val[5]) if val[5]
+             tokens << DemoTape::Token::Operator.new(",")
+             tokens << DemoTape::Token::Space.new(val[7]) if val[7]
+             tokens << make_token(:number, val[8], @token_index - 1)
 
-             cmd = DemoTape::Command.new(val[0], [val[4], val[7]], option: val[2])
+             cmd = DemoTape::Command.new(val[0], [val[4], val[8]], option: val[2])
              cmd.tokens = tokens
              result = attach_location(cmd).prepare!
 
@@ -675,13 +958,15 @@ module_eval(<<'.,.,', 'demotape.y', 287)
   end
 .,.,
 
-module_eval(<<'.,.,', 'demotape.y', 302)
-  def _reduce_25(val, _values, result)
+module_eval(<<'.,.,', 'demotape.y', 362)
+  def _reduce_50(val, _values, result)
                  @command_start_index = @token_index - 6
 
              tokens = [
                make_token(:identifier, val[0], @token_index - 6),
+               make_token(:space, val[1], @token_index - 5),
                make_token(:identifier, val[2], @token_index - 4),
+               make_token(:space, val[3], @token_index - 3),
                make_token(:duration, val[4], @token_index - 2)
              ]
 
@@ -693,13 +978,15 @@ module_eval(<<'.,.,', 'demotape.y', 302)
   end
 .,.,
 
-module_eval(<<'.,.,', 'demotape.y', 315)
-  def _reduce_26(val, _values, result)
+module_eval(<<'.,.,', 'demotape.y', 377)
+  def _reduce_51(val, _values, result)
                  @command_start_index = @token_index - 5
 
              tokens = [
                make_token(:identifier, val[0], @token_index - 5),
+               make_token(:space, val[1], @token_index - 4),
                make_token(:identifier, val[2], @token_index - 3),
+               make_token(:space, val[3], @token_index - 2),
                make_token(:number, val[4], @token_index - 1)
              ]
 
@@ -711,13 +998,15 @@ module_eval(<<'.,.,', 'demotape.y', 315)
   end
 .,.,
 
-module_eval(<<'.,.,', 'demotape.y', 328)
-  def _reduce_27(val, _values, result)
+module_eval(<<'.,.,', 'demotape.y', 392)
+  def _reduce_52(val, _values, result)
                  @command_start_index = @token_index - 5
 
              tokens = [
                make_token(:identifier, val[0], @token_index - 5),
+               make_token(:space, val[1], @token_index - 4),
                make_token(:identifier, val[2], @token_index - 3),
+               make_token(:space, val[3], @token_index - 2),
                make_token(:identifier, val[4], @token_index - 1)
              ]
 
@@ -729,13 +1018,15 @@ module_eval(<<'.,.,', 'demotape.y', 328)
   end
 .,.,
 
-module_eval(<<'.,.,', 'demotape.y', 341)
-  def _reduce_28(val, _values, result)
+module_eval(<<'.,.,', 'demotape.y', 407)
+  def _reduce_53(val, _values, result)
                  @command_start_index = @token_index - 5
 
              tokens = [
                make_token(:identifier, val[0], @token_index - 5),
+               make_token(:space, val[1], @token_index - 4),
                make_token(:identifier, val[2], @token_index - 3),
+               make_token(:space, val[3], @token_index - 2),
                make_token(:string, val[4], @token_index - 1)
              ]
 
@@ -747,12 +1038,13 @@ module_eval(<<'.,.,', 'demotape.y', 341)
   end
 .,.,
 
-module_eval(<<'.,.,', 'demotape.y', 354)
-  def _reduce_29(val, _values, result)
+module_eval(<<'.,.,', 'demotape.y', 422)
+  def _reduce_54(val, _values, result)
                  @command_start_index = @token_index - 3
 
              tokens = [
                make_token(:identifier, val[0], @token_index - 3),
+               make_token(:space, val[1], @token_index - 2),
                make_token(:string, val[2], @token_index - 1)
              ]
 
@@ -764,13 +1056,14 @@ module_eval(<<'.,.,', 'demotape.y', 354)
   end
 .,.,
 
-module_eval(<<'.,.,', 'demotape.y', 366)
-  def _reduce_30(val, _values, result)
+module_eval(<<'.,.,', 'demotape.y', 435)
+  def _reduce_55(val, _values, result)
                  @command_start_index = @token_index - 4
              duration_index = @token_index - 1  # TIME_UNIT position
 
              tokens = [
                make_token(:identifier, val[0], @token_index - 4),
+               make_token(:space, val[1], @token_index - 3),
                make_token(:duration, val[2], @token_index - 2)
              ]
 
@@ -782,13 +1075,14 @@ module_eval(<<'.,.,', 'demotape.y', 366)
   end
 .,.,
 
-module_eval(<<'.,.,', 'demotape.y', 379)
-  def _reduce_31(val, _values, result)
-                 @command_start_index = @token_index - 2
+module_eval(<<'.,.,', 'demotape.y', 449)
+  def _reduce_56(val, _values, result)
+                 @command_start_index = @token_index - 1
 
-             tokens = [make_token(:identifier, val[0], @token_index - 2)]
+             tokens = [make_token(:identifier, val[0], @token_index - 1)]
 
-             cmd = DemoTape::Command.new(val[0], "")
+             # This could be a group invocation, mark it as such
+             cmd = DemoTape::Command.new(val[0], "", group_invocation: true)
              cmd.tokens = tokens
              result = attach_location(cmd).prepare!
 
@@ -796,8 +1090,8 @@ module_eval(<<'.,.,', 'demotape.y', 379)
   end
 .,.,
 
-module_eval(<<'.,.,', 'demotape.y', 389)
-  def _reduce_32(val, _values, result)
+module_eval(<<'.,.,', 'demotape.y', 460)
+  def _reduce_57(val, _values, result)
                    @last_key_index = @token_index - 1
 
                tokens = [
@@ -812,8 +1106,8 @@ module_eval(<<'.,.,', 'demotape.y', 389)
   end
 .,.,
 
-module_eval(<<'.,.,', 'demotape.y', 400)
-  def _reduce_33(val, _values, result)
+module_eval(<<'.,.,', 'demotape.y', 471)
+  def _reduce_58(val, _values, result)
                    @last_key_index = @token_index - 1
 
                tokens = [
@@ -828,8 +1122,8 @@ module_eval(<<'.,.,', 'demotape.y', 400)
   end
 .,.,
 
-module_eval(<<'.,.,', 'demotape.y', 411)
-  def _reduce_34(val, _values, result)
+module_eval(<<'.,.,', 'demotape.y', 482)
+  def _reduce_59(val, _values, result)
                    @last_key_index = @token_index - 1
 
                tokens = val[0][:tokens] + [
@@ -843,8 +1137,8 @@ module_eval(<<'.,.,', 'demotape.y', 411)
   end
 .,.,
 
-module_eval(<<'.,.,', 'demotape.y', 421)
-  def _reduce_35(val, _values, result)
+module_eval(<<'.,.,', 'demotape.y', 492)
+  def _reduce_60(val, _values, result)
                    @last_key_index = @token_index - 1
 
                tokens = val[0][:tokens] + [
@@ -858,22 +1152,22 @@ module_eval(<<'.,.,', 'demotape.y', 421)
   end
 .,.,
 
-module_eval(<<'.,.,', 'demotape.y', 431)
-  def _reduce_36(val, _values, result)
+module_eval(<<'.,.,', 'demotape.y', 502)
+  def _reduce_61(val, _values, result)
      result = val[0]
     result
   end
 .,.,
 
-module_eval(<<'.,.,', 'demotape.y', 432)
-  def _reduce_37(val, _values, result)
+module_eval(<<'.,.,', 'demotape.y', 503)
+  def _reduce_62(val, _values, result)
      result = val[0]
     result
   end
 .,.,
 
-module_eval(<<'.,.,', 'demotape.y', 434)
-  def _reduce_38(val, _values, result)
+module_eval(<<'.,.,', 'demotape.y', 505)
+  def _reduce_63(val, _values, result)
      result = "#{val[0]}#{val[1]}"
     result
   end

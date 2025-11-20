@@ -59,10 +59,55 @@ module DemoTape
           next
         end
 
-        # Skip empty lines and comments (but only when not in multiline)
-        next if stripped_line.empty? || stripped_line.start_with?("#")
+        # Handle comments - emit as tokens
+        if stripped_line.start_with?("#")
+          @line_map[token_index] = {
+            line: @line_number,
+            column: 1,
+            content: original_line.chomp,
+            raw: stripped_line
+          }
+          tokens << [:COMMENT, stripped_line]
+          token_index += 1
+          
+          @line_map[token_index] = {
+            line: @line_number,
+            column: 1,
+            content: original_line.chomp
+          }
+          tokens << [:NEWLINE, "\n"]
+          token_index += 1
+          next
+        end
 
-        line_tokens = tokenize_line(stripped_line)
+        # Handle empty lines - emit just NEWLINE
+        if stripped_line.empty?
+          @line_map[token_index] = {
+            line: @line_number,
+            column: 1,
+            content: ""
+          }
+          tokens << [:NEWLINE, "\n"]
+          token_index += 1
+          next
+        end
+
+        # Tokenize the original line (preserving all spaces)
+        line_tokens = tokenize_line(line.chomp)
+        
+        # Convert first SPACE token to LEADING_SPACE if it exists
+        if line_tokens.any? && line_tokens[0][0] == :SPACE
+          line_tokens[0][0] = :LEADING_SPACE
+        end
+        
+        # Convert last SPACE token (before end) to TRAILING_SPACE if it exists
+        last_non_newline = line_tokens.length - 1
+        while last_non_newline >= 0 && line_tokens[last_non_newline][0] == :NEWLINE
+          last_non_newline -= 1
+        end
+        if last_non_newline >= 0 && line_tokens[last_non_newline][0] == :SPACE
+          line_tokens[last_non_newline][0] = :TRAILING_SPACE
+        end
 
         # Check if any token starts a multiline string
         multiline_idx = line_tokens.find_index do |t|
@@ -77,7 +122,7 @@ module DemoTape
             @line_map[token_index] = {
               line: @line_number,
               column: col,
-              content: original_line.strip,
+              content: original_line.chomp,
               raw: raw
             }
 
@@ -104,7 +149,7 @@ module DemoTape
           @line_map[token_index] = {
             line: @line_number,
             column: col,
-            content: original_line.strip,
+            content: original_line.chomp,
             raw: raw
           }
 
@@ -119,7 +164,7 @@ module DemoTape
         @line_map[token_index] = {
           line: @line_number,
           column: 1,
-          content: original_line.strip
+          content: original_line.chomp
         }
 
         tokens << [:NEWLINE, "\n"]
@@ -190,7 +235,14 @@ module DemoTape
 
         # Identifier (including dot notation for nested options)
         elsif scanner.scan(/[a-zA-Z_][\w.]*/)
-          tokens << [:IDENTIFIER, scanner[0], col, scanner[0]]
+          # Check for keywords
+          value = scanner[0]
+          token_type = case value
+                       when "do" then :DO
+                       when "end" then :END
+                       else :IDENTIFIER
+                       end
+          tokens << [token_type, value, col, value]
 
         # Word
         elsif scanner.scan(/\S+/)

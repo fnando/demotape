@@ -69,6 +69,7 @@ module DemoTape
     VALID_COMMANDS = KEY_MAPPING.keys + %w[
       Clear
       Copy
+      Group
       Include
       Output
       Pause
@@ -86,8 +87,8 @@ module DemoTape
       WaitUntil
     ].freeze
 
-    META_COMMANDS = %w[Require Set Include Output].freeze
-    COMMANDS_WITH_SPEED = KEY_MAPPING.keys + %w[Type TypeFile Run].freeze
+    META_COMMANDS = %w[Group Include Output Require Set].freeze
+    COMMANDS_WITH_SPEED = KEY_MAPPING.keys + %w[Run Type TypeFile].freeze
     COMMANDS_WITH_TIMEOUT = %w[WaitUntil].freeze
     VALID_TIME_UNITS = %w[ms s m h].freeze
 
@@ -104,7 +105,7 @@ module DemoTape
       typing_speed variable_typing width
     ].freeze
 
-    attr_reader :type, :args, :options
+    attr_reader :type, :args, :options, :children
     attr_accessor :column, :duration_column, :file, :line, :line_content,
                   :speed_column, :timeout_column, :tokens
 
@@ -112,6 +113,8 @@ module DemoTape
       @type = type
       @args = args
       @options = options
+      @children = options.delete(:children) || []
+      @group_invocation = options.delete(:group_invocation) || false
       @line = nil
       @column = nil
       @line_content = nil
@@ -125,6 +128,10 @@ module DemoTape
     # Whether this command represents a key press
     def key?
       VALID_KEYS.include?(type)
+    end
+
+    def group?
+      type == "Group"
     end
 
     def keys
@@ -154,7 +161,14 @@ module DemoTape
                       .to_sym
     end
 
+    def group_invocation?
+      # Group invocations are marked as such
+      # AND don't start with uppercase letter
+      @group_invocation && type[0].to_s.match?(/[^A-Z]/)
+    end
+
     def validate_command!
+      return if group_invocation?
       return if VALID_COMMANDS.include?(type)
 
       raise_error "Unknown command: #{type.inspect}"
@@ -181,7 +195,7 @@ module DemoTape
       return if SET_OPTIONS.include?(base_option)
 
       raise_error "Unknown option: #{options[:option].inspect} #{self}",
-                  column_override: tokens[1].column
+                  column_override: tokens[2].column
     end
 
     def validate_keys!
@@ -212,20 +226,14 @@ module DemoTape
       end
     end
 
-    def prepare!
-      validate_command!
-      validate_speed!
-      validate_timeout!
-      normalize_theme_options!
-      validate_set_options!
-      validate_keys!
-      validate_regex!
-      validate_duration!
-      validate_type_file!
+    private def validate_children!
+      return unless group?
 
-      normalize_spacing_values!
+      children.each do |child|
+        next unless child.group?
 
-      self
+        child.raise_error "Nested groups are not allowed"
+      end
     end
 
     private def validate_type_file!
@@ -253,6 +261,23 @@ module DemoTape
       raise_error "Invalid time unit: #{unit.inspect}", column_override: col
     end
 
+    def prepare!
+      validate_command!
+      validate_speed!
+      validate_timeout!
+      validate_children!
+      normalize_theme_options!
+      validate_set_options!
+      validate_keys!
+      validate_regex!
+      validate_duration!
+      validate_type_file!
+
+      normalize_spacing_values!
+
+      self
+    end
+
     private def normalize_theme_options!
       return unless type == "Set"
       return unless options[:option]&.include?(".")
@@ -261,12 +286,12 @@ module DemoTape
 
       unless option == "theme"
         raise_error "Unexpected attribute #{options[:option].inspect}",
-                    column_override: tokens[1].column
+                    column_override: tokens[2].column
       end
 
       unless Theme.valid_options.include?(sub_option.to_sym)
         raise_error "Invalid theme property",
-                    column_override: tokens[1].column + 6 # ".theme".size
+                    column_override: tokens[2].column + option.length + 1 # option + "."
       end
 
       @options[:option] = option
@@ -291,8 +316,13 @@ module DemoTape
       raise DemoTape::ParseError, message unless line && col && line_content
 
       error_msg = "#{message} at #{location(column_override:)}:\n"
-      error_msg += "  #{line_content}\n"
-      error_msg += "  #{' ' * (col - 1)}^"
+      error_msg += "  #{line_content.strip}\n"
+
+      # Calculate pointer position: col is absolute position in original line
+      # line_content.strip removes leading spaces, so we need to adjust
+      leading_spaces = line_content[/^\s*/].length
+      pointer_col = col - leading_spaces - 1
+      error_msg += "  #{' ' * pointer_col}^"
 
       raise DemoTape::ParseError, error_msg
     end
@@ -309,28 +339,23 @@ module DemoTape
 
       tokens.each_with_index do |token, index|
         previous_token = tokens[index - 1]
-        preceded_by_comma = previous_token.is_a?(Token::Operator) &&
-                            previous_token.value == ","
+        preceded_by_number = previous_token.is_a?(Token::Number)
 
         case token
         when Token::String
-          values << " "
           values << thor.set_color(token.raw, :yellow)
         when Token::Operator
           values << thor.set_color(token.value, :white)
-        when Token::Number
-          values << " " unless previous_token.is_a?(Token::Operator)
-          values << " " if preceded_by_comma
-          values << thor.set_color(token.value, :magenta)
-        when Token::Duration
-          values << " " unless previous_token.is_a?(Token::Operator)
+        when Token::Number, Token::Duration
           values << thor.set_color(token.value, :magenta)
         when Token::Regex
-          values << " "
           values << thor.set_color(token.raw, :green)
         when Token::Identifier
-          values << " " if previous_token.is_a?(Token::Identifier)
           values << thor.set_color(token.value, :blue)
+        when Token::Space
+          values << " " unless preceded_by_number
+        when Token::Keyword
+          values << thor.set_color(token.value, :cyan)
         else
           raise "Unexpected token type: #{token.class.name}"
         end

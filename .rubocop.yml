@@ -16,3 +16,6 @@ Gemspec/AttributeAssignment:
 
 Style/IdenticalConditionalBranches:
   Enabled: false
+
+Layout/LineContinuationLeadingSpace:
+  Enabled: false
