@@ -361,7 +361,6 @@ module DemoTape
           values << " " unless preceded_by_number
         when Token::Keyword
           # do nothing
-          # values << thor.set_color(token.value, :cyan)
         else
           raise "Unexpected token type: #{token.class.name}"
         end
