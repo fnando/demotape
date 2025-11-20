@@ -14,6 +14,15 @@ syn match demotapeComment "#.*$"
 syn keyword demotapeCommand Type TypeFile WaitUntil Run Set Output Copy Paste Send Include Screenshot
 syn keyword demotapeCommand Wait Sleep Require Pause Resume Clear nextgroup=demotapeString,demotapeDuration,demotapeNumber skipwhite
 
+" Group blocks
+syn keyword demotapeCommand Group nextgroup=demotapeGroupName skipwhite
+syn match demotapeGroupName "\<[a-z_][a-z0-9_]*\>" contained nextgroup=demotapeGroupDo skipwhite
+syn keyword demotapeGroupDo do contained
+syn keyword demotapeGroupEnd end
+
+" Group invocations (lowercase identifiers on their own line)
+syn match demotapeGroupInvocation "^\s*\zs[a-z_][a-z0-9_]*\ze\s*$"
+
 " Special keys
 syn keyword demotapeKey Enter Return Tab Backspace Delete Escape Esc Space
 syn keyword demotapeKey Up Down Left Right Home End PageUp PageDown Insert
@@ -65,6 +74,10 @@ syn match demotapeSeparator ","
 " Highlight groups
 hi def link demotapeComment Comment
 hi def link demotapeCommand Keyword
+hi def link demotapeGroupName Function
+hi def link demotapeGroupDo Keyword
+hi def link demotapeGroupEnd Keyword
+hi def link demotapeGroupInvocation Function
 hi def link demotapeKey Function
 hi def link demotapeModifier Special
 hi def link demotapeOperator Operator

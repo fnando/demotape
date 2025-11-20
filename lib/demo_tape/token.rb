@@ -20,5 +20,9 @@ module DemoTape
     class Regex < Base; end
     class TimeUnit < Base; end
     class Operator < Base; end
+    class Space < Base; end
+    class LeadingSpace < Base; end
+    class TrailingSpace < Base; end
+    class Keyword < Base; end
   end
 end

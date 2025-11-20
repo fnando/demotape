@@ -454,6 +454,24 @@ Require "git"
 Require "ll"
 ```
 
+**Group** - Define reusable command groups
+
+Groups allow you to define a set of commands that can be called multiple times:
+
+```demotape
+Group hello do
+  Run "echo 'Hello, World!'"
+  Run "echo 'Goodbye, World!'"
+end
+
+hello
+Run "echo 'In between groups'"
+hello
+```
+
+In this example, the `hello` group is defined with two commands and then called
+twice. Groups help organize and reuse common command sequences in your scripts.
+
 ### Data Types
 
 #### Strings
@@ -604,7 +622,7 @@ Sleep 1s
 - **Recording**: `Output`, `Screenshot`, `Pause`, `Resume`
 - **Screen**: `Clear`, `Send`
 - **Configuration**: `Set`
-- **Organization**: `Include`, `Require`
+- **Organization**: `Include`, `Require`, `Group`
 
 ### Notes
 

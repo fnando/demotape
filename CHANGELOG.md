@@ -13,6 +13,7 @@ Prefix your message with one of the following:
 
 ## Unreleased
 
+- [Added] Add `Group` command to group multiple commands together.
 - [Added] Add `Run` command to execute shell commands (combines Type, Sleep,
   Enter, Sleep).
 - [Added] Add `Set run_enter_delay` configuration option (default: 300ms).

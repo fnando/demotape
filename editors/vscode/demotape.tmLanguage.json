@@ -3,8 +3,29 @@
   "name": "DemoTape",
   "scopeName": "source.demotape",
   "fileTypes": ["tape"],
-  "patterns": [{ "include": "#comments" }, { "include": "#commands" }],
+  "patterns": [{ "include": "#comments" }, { "include": "#blocks" }, { "include": "#commands" }],
   "repository": {
+    "blocks": {
+      "patterns": [
+        {
+          "comment": "Group blocks",
+          "begin": "\\b(Group)\\s+([a-z_][a-z0-9_]*)\\s+(do)\\b",
+          "end": "\\b(end)\\b",
+          "beginCaptures": {
+            "1": { "name": "keyword.control.demotape" },
+            "2": { "name": "entity.name.function.demotape" },
+            "3": { "name": "keyword.control.demotape" }
+          },
+          "endCaptures": {
+            "1": { "name": "keyword.control.demotape" }
+          },
+          "patterns": [
+            { "include": "#comments" },
+            { "include": "#commands" }
+          ]
+        }
+      ]
+    },
     "comments": {
       "patterns": [
         {
@@ -15,6 +36,13 @@
     },
     "commands": {
       "patterns": [
+        {
+          "comment": "Group invocations (lowercase identifiers)",
+          "match": "^\\s*([a-z_][a-z0-9_]*)\\s*$",
+          "captures": {
+            "1": { "name": "entity.name.function.demotape" }
+          }
+        },
         {
           "comment": "Commands with @ duration/speed",
           "match": "\\b(Type|TypeFile|WaitUntil|Run)\\b",
