@@ -4,11 +4,11 @@ require "test_helper"
 
 class DemoTapeTest < Minitest::Test
   test "supports escaping quotes in strings" do
-    assert_equal 'say "hello"',
-                 parse('Type "say \\"hello\\""')[0].args
+    assert_equal %[say "hello"],
+                 parse(%[Type "say \\"hello\\""]).first.args
 
     assert_equal "say 'hello'",
-                 parse("Type 'say \\'hello\\''")[0].args
+                 parse("Type 'say \\'hello\\''").first.args
   end
 
   test "fails to parse unknown command" do

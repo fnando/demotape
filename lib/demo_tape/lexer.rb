@@ -61,9 +61,23 @@ module DemoTape
 
         # Handle comments - emit as tokens
         if stripped_line.start_with?("#")
+          # Emit LEADING_SPACE if there's any
+          leading_space = original_line[/^[ \t]*/]
+          if leading_space && !leading_space.empty?
+            @line_map[token_index] = {
+              line: @line_number,
+              column: 1,
+              content: original_line.chomp,
+              raw: leading_space
+            }
+            tokens << [:LEADING_SPACE, leading_space]
+            token_index += 1
+          end
+          
+          # Emit COMMENT token
           @line_map[token_index] = {
             line: @line_number,
-            column: 1,
+            column: leading_space.length + 1,
             content: original_line.chomp,
             raw: stripped_line
           }
@@ -98,6 +112,16 @@ module DemoTape
         # Convert first SPACE token to LEADING_SPACE if it exists
         if line_tokens.any? && line_tokens[0][0] == :SPACE
           line_tokens[0][0] = :LEADING_SPACE
+        end
+
+        # Special case: if the line is just whitespace followed by 'end', skip the LEADING_SPACE
+        # This helps the parser avoid shift/reduce conflicts with group_body rules
+        if line_tokens.length >= 2 &&
+           line_tokens[0][0] == :LEADING_SPACE &&
+           line_tokens[1][0] == :END &&
+           (line_tokens.length == 2 || line_tokens[2][0] == :SPACE)
+          # Skip the leading space token for 'end' keyword
+          line_tokens.shift
         end
 
         # Convert last SPACE token (before end) to TRAILING_SPACE if it exists
@@ -210,15 +234,19 @@ module DemoTape
 
         # Duration (number + time unit - any identifier)
         elsif scanner.scan(/(\d+(?:\.\d+)?|\.\d+)([a-zA-Z]+)/)
+          number_part = scanner[1]
+          unit_part = scanner[2]
+          full_match = scanner[0]
           tokens << [
-            :NUMBER,
-            scanner[1].include?(".") ? scanner[1].to_f : scanner[1].to_i,
+            :DURATION,
+            {
+              number: number_part.include?(".") ? number_part.to_f : number_part.to_i,
+              unit: unit_part,
+              raw: full_match
+            },
             col,
-            scanner[1]
+            full_match
           ]
-          # TIME_UNIT starts after the number
-          time_unit_col = col + scanner[1].length
-          tokens << [:TIME_UNIT, scanner[2], time_unit_col, scanner[2]]
 
         # Number
         elsif scanner.scan(/\d+(?:\.\d+)?|\.\d+/)
@@ -232,6 +260,10 @@ module DemoTape
         # Plus symbol
         elsif scanner.scan("+")
           tokens << [:PLUS, "+", col, "+"]
+
+        # Minus symbol
+        elsif scanner.scan("-")
+          tokens << [:MINUS, "-", col, "-"]
 
         # Comma
         elsif scanner.scan(",")

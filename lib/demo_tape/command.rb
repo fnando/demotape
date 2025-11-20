@@ -62,6 +62,7 @@ module DemoTape
       "F12" => :f12,
       "Meta" => :meta,
       "Command" => :command,
+      "Cmd" => :command,
       "Slash" => "/",
       "BackSlash" => "\\"
     }.freeze
@@ -322,14 +323,24 @@ module DemoTape
         previous_token = tokens[index - 1]
         preceded_by_number = previous_token.is_a?(Token::Number)
         preceded_by_group_name = tokens[index - 2]&.value == "Group"
+        preceded_by_command_with_duration =
+          %w[Sleep Wait].include?(tokens[index - 2]&.value)
 
         case token
+        when Token::Duration
+          duration = token.value[:raw].to_s.strip
+          duration = "#{duration}s" if token.value[:unit].to_s.strip == ""
+          values << thor.set_color(duration, :cyan)
         when Token::String
           values << thor.set_color(token.raw, :yellow)
         when Token::Operator
           values << thor.set_color(token.value, :white)
-        when Token::Number, Token::Duration
-          values << thor.set_color(token.value, :magenta)
+        when Token::Number
+          values << if preceded_by_command_with_duration
+                      thor.set_color("#{token.value}s", :cyan)
+                    else
+                      thor.set_color(token.value, :magenta)
+                    end
         when Token::Regex
           values << thor.set_color(token.raw, :green)
         when Token::Identifier

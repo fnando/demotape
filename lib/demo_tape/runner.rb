@@ -34,6 +34,7 @@ module DemoTape
       error = error.message if error.respond_to?(:message)
 
       thor.say_error "\nERROR: #{error}", :red
+      puts error.backtrace if error.respond_to?(:backtrace)
       exit 1
     end
 
@@ -67,7 +68,9 @@ module DemoTape
     def commands
       @commands ||= begin
         debug "Parsing tape"
-        Parser.new.parse(content, file: file_path)
+        parser = Parser.new
+        tree = parser.parse(content, file: file_path)
+        parser.to_commands(tree)
       end
     end
 
@@ -112,7 +115,9 @@ module DemoTape
           if command.type == "Include"
             nested_level += 1
             thor.say_status :command, command.to_formatted(thor)
-            Parser.new.parse(File.read(command.args), file: command.args)
+            parser = Parser.new
+            tree = parser.parse(File.read(command.args), file: command.args)
+            parser.to_commands(tree)
           else
             command
           end
@@ -427,7 +432,7 @@ module DemoTape
         end
 
         run_wait_until(
-          Command.new("WaitUntil", "", pattern: /^::demotape:ready::$/)
+          Command.new("WaitUntil", "^::demotape:ready::$")
         )
         run_clear(nil)
         sleep 1
@@ -525,13 +530,6 @@ module DemoTape
     end
 
     def run_wait_until(command)
-      timeout = Duration.parse(command.options.fetch(:duration, 15))
-      tick = 0.02
-
-      curr_line = read_state(:term_current_line)
-      offset = curr_line[:number].to_i
-      lines = []
-
       spinner = Spinner.new(phrases: [
         "Searching high and low…",
         "Looking under every byte…",
@@ -540,6 +538,16 @@ module DemoTape
         "Seeking the needle in the haystack…"
       ])
 
+      timeout = Duration.parse(command.options.fetch(:duration, 15))
+      pattern = Regexp.new(command.args)
+      tick = 0.02
+
+      curr_line = read_state(:term_current_line)
+
+      # @todo think what to do with offset and how to use it
+      _offset = curr_line[:number].to_i
+      lines = []
+
       while timeout.positive?
         session_mutex.synchronize do
           script = <<~SCRIPT
@@ -547,7 +555,7 @@ module DemoTape
               let linesCount = term.buffer.active.length;
               let lines = [];
 
-              for (let lineNumber = #{offset}; lineNumber < linesCount; lineNumber += 1) {
+              for (let lineNumber = 0; lineNumber < linesCount; lineNumber += 1) {
                 lines.push(term.buffer.active.getLine(lineNumber).translateToString().trimEnd());
               }
 
@@ -558,7 +566,7 @@ module DemoTape
           lines = session.evaluate_script(script)
         end
 
-        matches = lines.grep(command.options[:pattern])
+        matches = lines.grep(pattern)
 
         if matches.any?
           spinner.stop
@@ -570,7 +578,11 @@ module DemoTape
       end
 
       spinner.stop
-      command.raise_error("Timeout")
+      screen = lines.reject(&:empty?)
+      screen = thor.set_color(screen.join("\n"), :red)
+      command.raise_error(
+        "Timeout waiting for pattern #{pattern.inspect}\n\n#{screen}"
+      )
     end
 
     def run_type(command)
@@ -669,13 +681,13 @@ module DemoTape
         value = Spacing.new(*(Array(value) * 4).take(4).map(&:to_i))
       end
 
-      if name == :theme
-        if command.options[:sub_option]
-          theme[command.options[:sub_option].to_sym] = value
-          return
-        else
-          @theme = nil
-        end
+      # Theme is cached, so we just need to clear the
+      # cached value to force reload.
+      @theme = nil if name == :theme
+
+      if command.options[:option].start_with?("theme.")
+        attr_name = command.options[:option].sub("theme.", "").to_sym
+        theme[attr_name] = value
       end
 
       options[name] = value
@@ -692,6 +704,7 @@ module DemoTape
 
       send_keys(:control, "l")
       run_wait(Command.new("Wait", "", duration: 0.5))
+      write_state(:term_current_line, term_current_line)
     end
 
     def run_run(command)

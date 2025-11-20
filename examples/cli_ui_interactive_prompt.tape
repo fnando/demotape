@@ -1,9 +1,6 @@
 Include "examples/meta/cli.tape"
 
-Type "CLI::UI.ask('What do you use?', options: %w(javascript go ruby python))"
-Sleep .5
-Enter
-Sleep 1
+Run "CLI::UI.ask('What do you use?', options: %w[javascript go ruby python])"
 
 Down@.5 3
 Sleep 1
@@ -12,5 +9,5 @@ Sleep 1
 Down@.5
 Sleep 1
 Enter
-
+WaitUntil@3s /You chose: ruby/
 Sleep 3

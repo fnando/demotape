@@ -6,41 +6,57 @@
 
 require 'racc/parser.rb'
 
+  require_relative "token"
+  require_relative "lexer"
+  require_relative "ast"
 
 module DemoTape
   class Parser < Racc::Parser
 
-module_eval(<<'...end demotape.y/module_eval...', 'demotape.y', 513)
+module_eval(<<'...end demotape.y/module_eval...', 'demotape.y', 223)
   def parse(str, file: "<unknown>")
     @file = file
     @lexer = DemoTape::Lexer.new
     @tokens = @lexer.tokenize(str)
     @token_index = 0
+    @token_indices = {}  # Map token object_id to its index
     do_parse
   end
 
   def next_token
     token = @tokens.shift
     @current_token_index = @token_index
+
+    # Store the index for this token value
+    if token && token[1]
+      @token_indices[token[1].object_id] = @current_token_index
+    end
+
     @token_index += 1
     token
+  end
+
+  def index_for_value(value)
+    @token_indices[value.object_id] || @current_token_index
   end
 
   def make_token(type, value, index)
     line_info = @lexer.line_map[index] || {}
     token_class = case type
-                  when :identifier then Token::Identifier
-                  when :string then Token::String
-                  when :number then Token::Number
-                  when :duration then Token::Duration
-                  when :regex then Token::Regex
-                  when :time_unit then Token::TimeUnit
-                  when :operator then Token::Operator
-                  when :space then Token::Space
-                  when :leading_space then Token::LeadingSpace
-                  when :trailing_space then Token::TrailingSpace
-                  when :keyword then Token::Keyword
-                  else Token::Base
+                  when :identifier then DemoTape::Token::Identifier
+                  when :string then DemoTape::Token::String
+                  when :number then DemoTape::Token::Number
+                  when :duration then DemoTape::Token::Duration
+                  when :regex then DemoTape::Token::Regex
+                  when :time_unit then DemoTape::Token::TimeUnit
+                  when :operator then DemoTape::Token::Operator
+                  when :space then DemoTape::Token::Space
+                  when :leading_space then DemoTape::Token::LeadingSpace
+                  when :trailing_space then DemoTape::Token::TrailingSpace
+                  when :keyword then DemoTape::Token::Keyword
+                  when :comment then DemoTape::Token::Comment
+                  when :newline then DemoTape::Token::Newline
+                  else DemoTape::Token::Base
                   end
 
     token_class.new(
@@ -51,24 +67,21 @@ module_eval(<<'...end demotape.y/module_eval...', 'demotape.y', 513)
     )
   end
 
-  def attach_location(command, duration_index: nil)
-    line_info = @lexer.line_map[@command_start_index] || {}
-    command.line = line_info[:line]
-    command.column = line_info[:column]
-    command.line_content = line_info[:content]
-    command.file = @file
+  def line_for_token_at(index)
+    line_info = @lexer.line_map[index] || {}
+    line_info[:line]
+  end
 
-    # Attach duration/speed/timeout specific columns if provided
-    if duration_index
-      duration_info = @lexer.line_map[duration_index] || {}
-      command.duration_column = duration_info[:column]
-    end
+  def column_for_token_at(index)
+    line_info = @lexer.line_map[index] || {}
+    line_info[:column]
+  end
 
-    command
+  def collect_tokens(*values)
+    values.flatten.compact.select { |v| v.is_a?(DemoTape::Token::Base) }
   end
 
   def on_error(token_id, token_value, value_stack)
-    # Get line metadata from the lexer's line map
     line_info = @lexer.line_map[@current_token_index] || {}
     line_num = line_info[:line] || "?"
     col_num = line_info[:column] || 1
@@ -77,190 +90,423 @@ module_eval(<<'...end demotape.y/module_eval...', 'demotape.y', 513)
     token_name = token_to_str(token_id) || token_id.to_s
 
     error_msg = "Unexpected token #{token_name.inspect} at #{@file}:#{line_num}:#{col_num}:\n"
-    error_msg += "  #{line_content}\n"
-    error_msg += "  #{' ' * (col_num - 1)}^"
+    error_msg += "  #{line_content.strip}\n"
+    error_msg += "  #{' ' * (col_num - line_content.length + line_content.strip.length - 1)}^"
 
     raise DemoTape::ParseError, error_msg
+  end
+
+  def to_commands(parsed)
+    commands = []
+
+    parsed.each do |item|
+      next unless item.is_a?(Hash)
+
+      if item[:type] == :command
+        commands << build_command_from_tokens(item[:tokens], item[:line], item[:column])
+      elsif item[:type] == :group
+        commands << build_group_from_tokens(item)
+      end
+    end
+
+    commands
+  end
+
+  private
+
+  def build_command_from_tokens(tokens, line, column)
+    # Skip leading space tokens
+    tokens = tokens.reject {|t| t.is_a?(DemoTape::Token::LeadingSpace) || t.is_a?(DemoTape::Token::TrailingSpace) }
+
+    # First identifier is the command type
+    type_token = tokens.find {|t| t.is_a?(DemoTape::Token::Identifier) }
+    return nil unless type_token
+
+    type = type_token.value
+
+    # Check if this is a group invocation (lowercase first letter)
+    is_group_invocation = type[0].match?(/[^A-Z]/)
+
+    # Build command based on type
+    if type == "Set"
+      build_set_command(tokens, line, column)
+    elsif DemoTape::Command::VALID_KEYS.include?(type)
+      build_key_command(tokens, line, column, is_group_invocation)
+    else
+      build_simple_command(tokens, line, column, is_group_invocation)
+    end
+  end
+
+  def build_set_command(tokens, line, column)
+    # Set option value
+    # or Set option value1, value2, value3, value4
+    identifiers = tokens.select {|t| t.is_a?(DemoTape::Token::Identifier) }
+
+    option = identifiers[1]&.value
+
+    # Find values after the option
+    option_index = tokens.index {|t| t.is_a?(DemoTape::Token::Identifier) && t.value == option }
+    value_tokens = tokens[(option_index + 1)..-1].reject {|t| t.is_a?(DemoTape::Token::Space) }
+
+    # Check if we have commas (multiple values)
+    has_commas = value_tokens.any? {|t| t.is_a?(DemoTape::Token::Operator) && t.value == "," }
+
+    if has_commas
+      # Multiple values - parse comma-separated list
+      values = []
+      value_tokens.each do |token|
+        next if token.is_a?(DemoTape::Token::Operator) && token.value == ","
+        values << extract_value(token)
+      end
+
+      cmd = DemoTape::Command.new("Set", values, option: option)
+    else
+      # Single value
+      value_token = value_tokens.first
+      value = extract_value(value_token)
+
+      cmd = DemoTape::Command.new("Set", value, option: option)
+    end
+
+    cmd.line = line
+    cmd.column = column
+    cmd.tokens = tokens
+    cmd.file = @file
+    cmd
+  end
+
+  def build_key_command(tokens, line, column, is_group_invocation)
+    type_token = tokens.find {|t| t.is_a?(DemoTape::Token::Identifier) }
+    type = type_token.value
+
+    options = {}
+
+    # Check for @ duration
+    at_index = tokens.index {|t| t.is_a?(DemoTape::Token::Operator) && t.value == "@" }
+    if at_index
+      duration_token = tokens[at_index + 1]
+      if duration_token.is_a?(DemoTape::Token::Duration)
+        options[:duration] = parse_duration(duration_token)
+      elsif duration_token.is_a?(DemoTape::Token::Number)
+        options[:duration] = duration_token.value.to_f
+      end
+    end
+
+    # Check for + keys (key combos)
+    plus_indices = tokens.each_index.select {|i| tokens[i].is_a?(DemoTape::Token::Operator) && tokens[i].value == "+" }
+    if plus_indices.any?
+      keys = []
+      plus_indices.each do |plus_index|
+        key_token = tokens[plus_index + 1]
+        keys << key_token.value if key_token.is_a?(DemoTape::Token::Identifier)
+      end
+      options[:keys] = keys unless keys.empty?
+    end
+
+    # Check for count (number after the key)
+    if !at_index
+      # No duration, so first number is count
+      number_token = tokens.find {|t| t.is_a?(DemoTape::Token::Number) }
+      options[:count] = number_token.value if number_token
+    else
+      # Has duration, look for numbers after the duration token
+      duration_token_index = at_index + 1
+      count_token = tokens[(duration_token_index + 1)..-1]&.find {|t| t.is_a?(DemoTape::Token::Number) }
+      options[:count] = count_token.value if count_token
+    end
+
+    cmd = DemoTape::Command.new(type, "", **options)
+    cmd.line = line
+    cmd.column = column
+    cmd.tokens = tokens
+    cmd.file = @file
+
+    if is_group_invocation
+      cmd.instance_variable_set(:@group_invocation, true)
+    end
+
+    cmd
+  end
+
+  def build_simple_command(tokens, line, column, is_group_invocation)
+    type_token = tokens.find {|t| t.is_a?(DemoTape::Token::Identifier) }
+    type = type_token.value
+
+    options = {}
+
+    # Check for @ duration
+    at_index = tokens.index {|t| t.is_a?(DemoTape::Token::Operator) && t.value == "@" }
+    if at_index
+      duration_token = tokens[at_index + 1]
+      if duration_token.is_a?(DemoTape::Token::Duration)
+        options[:duration] = parse_duration(duration_token)
+      elsif duration_token.is_a?(DemoTape::Token::Number)
+        options[:duration] = duration_token.value.to_f
+      end
+    end
+
+    # Find the string/value argument
+    string_token = tokens.find {|t| t.is_a?(DemoTape::Token::String) }
+    args = string_token ? string_token.value : ""
+
+    # For Sleep, Wait - check for duration/number
+    if type == "Sleep" || type == "Wait"
+      duration_token = tokens.find {|t| t.is_a?(DemoTape::Token::Duration) }
+      if duration_token
+        options[:duration] = parse_duration(duration_token)
+      else
+        # Check for plain number (without time unit)
+        number_token = tokens.find {|t| t.is_a?(DemoTape::Token::Number) }
+        if number_token
+          options[:duration] = number_token.value.to_f
+        end
+      end
+    elsif type == "WaitUntil"
+      regex_token = tokens.find {|t| t.is_a?(DemoTape::Token::Regex) }
+      if regex_token
+        args = regex_token.value
+      end
+    end
+
+    cmd = DemoTape::Command.new(type, args, **options)
+    cmd.line = line
+    cmd.column = column
+    cmd.tokens = tokens
+    cmd.file = @file
+
+    if is_group_invocation
+      cmd.instance_variable_set(:@group_invocation, true)
+    end
+
+    cmd
+  end
+
+  def build_group_from_tokens(item)
+    tokens = item[:tokens].reject {|t| t.is_a?(DemoTape::Token::LeadingSpace) || t.is_a?(DemoTape::Token::TrailingSpace) || t.is_a?(DemoTape::Token::Keyword) }
+
+    # Second identifier is the group name
+    identifiers = tokens.select {|t| t.is_a?(DemoTape::Token::Identifier) }
+    name = identifiers[1]&.value || ""
+
+    # Build children commands
+    children_items = item[:children].select {|child| child.is_a?(Hash) }
+    children = children_items.map do |child_item|
+      if child_item[:type] == :command
+        build_command_from_tokens(child_item[:tokens], child_item[:line], child_item[:column])
+      elsif child_item[:type] == :group
+        build_group_from_tokens(child_item)
+      end
+    end.compact
+
+    cmd = DemoTape::Command.new("Group", name, children: children)
+    cmd.line = item[:line]
+    cmd.column = item[:column]
+    cmd.tokens = item[:tokens]
+    cmd.file = @file
+    cmd
+  end
+
+  def extract_value(token)
+    case token
+    when DemoTape::Token::Number
+      token.value
+    when DemoTape::Token::String
+      token.value
+    when DemoTape::Token::Identifier
+      # Could be a boolean or identifier
+      case token.value
+      when "true" then true
+      when "false" then false
+      else token.value
+      end
+    when DemoTape::Token::Duration
+      parse_duration(token)
+    else
+      token.value
+    end
+  end
+
+  def parse_duration(duration_token)
+    value = duration_token.value
+    number = value[:number]
+    unit = value[:unit]
+
+    # Convert to seconds
+    case unit
+    when "ms"
+      number / 1000.0
+    when "s"
+      number.to_f
+    when "m"
+      number * 60.0
+    when "h"
+      number * 3600.0
+    else
+      number.to_f
+    end
   end
 
 ...end demotape.y/module_eval...
 ##### State transition tables begin ###
 
 racc_action_table = [
-   -51,    98,    99,    97,    79,    51,    61,    52,    53,    62,
-    54,     8,    57,    58,    77,    77,    87,    84,    15,    85,
-     4,     5,     7,    57,    58,    19,   -17,    10,    11,     7,
-    12,    13,     7,   -17,    35,    21,   -17,    90,    37,    91,
-    36,    57,    58,    92,    34,    38,     7,    57,    58,    39,
-    64,    29,    30,    65,   -49,    98,    99,    97,   -48,    98,
-    99,    97,    47,    19,     7,    98,    99,    97,    98,    99,
-    97,    98,    99,    97,    29,    30,    29,    30,    29,    30,
-    29,    30,    29,    30,    70,    19,    29,    30,    29,    30,
-    29,    30,    29,    30,    29,    30,    24,    25,    19,    44,
-    45,    19,    50,    60,    63,    66,    67,    68,    69,    73,
-    76,    77,    78,    82,    83,    94,    95,   101,   102,   104,
-   106,   108,   110,   112 ]
+     5,     4,     6,    22,    16,    10,    11,    12,    13,    14,
+    15,    17,    18,    19,    20,    21,     5,     4,     6,    24,
+    16,    10,    11,    12,    13,    14,    15,    17,    18,    19,
+    20,    21,    44,    41,    42,    30,    16,    10,    11,    12,
+    13,    14,    15,    17,    18,    19,    20,    21,    44,    41,
+    42,    31,    16,    10,    11,    12,    13,    14,    15,    17,
+    18,    19,    20,    21,    44,    41,    42,    45,    16,    10,
+    11,    12,    13,    14,    15,    17,    18,    19,    20,    21,
+    44,    41,    42,    47,    16,    10,    11,    12,    13,    14,
+    15,    17,    18,    19,    20,    21,    44,    41,    42,    51,
+    16,    10,    11,    12,    13,    14,    15,    17,    18,    19,
+    20,    21,    25,    48,    49,    16,    10,    11,    12,    13,
+    14,    15,    17,    18,    19,    20,    21,    54,    56,    57,
+    16,    10,    11,    12,    13,    14,    15,    17,    18,    19,
+    20,    21,    27,    28,    16,    10,    11,    12,    13,    14,
+    15,    17,    18,    19,    20,    21,    32,    33,    16,    10,
+    11,    12,    13,    14,    15,    17,    18,    19,    20,    21,
+    52,    59,    16,    10,    11,    12,    13,    14,    15,    17,
+    18,    19,    20,    21,    61,    60,    16,    10,    11,    12,
+    13,    14,    15,    17,    18,    19,    20,    21,    34,    36,
+    35,    37,    63,    64,    68,    67,    62,    65,    66,    69,
+    70,    71,    72,    73,    74,    75,    76 ]
 
 racc_action_check = [
-    85,    85,    85,    85,    60,    35,    37,    35,    35,    37,
-    35,     1,    35,    35,    85,    60,    76,    76,     4,    76,
-     0,     0,     0,    76,    76,     6,     0,     2,     2,     2,
-     3,     3,     3,     2,    19,     8,     3,    78,    19,    78,
-    19,    78,    78,    79,    18,    20,    18,    79,    79,    20,
-    39,    16,    16,    39,   104,   104,   104,   104,   108,   108,
-   108,   108,    32,     9,    32,   102,   102,   102,   106,   106,
-   106,   110,   110,   110,    17,    17,    22,    22,    23,    23,
-    26,    26,    27,    27,    46,    46,    48,    48,    49,    49,
-    71,    71,    72,    72,    84,    84,    10,    12,    14,    28,
-    31,    33,    34,    36,    38,    40,    41,    42,    43,    47,
-    51,    53,    59,    74,    75,    80,    81,    96,   100,   103,
-   105,   107,   109,   111 ]
+     0,     0,     0,     1,     0,     0,     0,     0,     0,     0,
+     0,     0,     0,     0,     0,     0,     2,     2,     2,     4,
+     2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
+     2,     2,    34,    34,    34,    22,    34,    34,    34,    34,
+    34,    34,    34,    34,    34,    34,    34,    34,    36,    36,
+    36,    25,    36,    36,    36,    36,    36,    36,    36,    36,
+    36,    36,    36,    36,    39,    39,    39,    35,    39,    39,
+    39,    39,    39,    39,    39,    39,    39,    39,    39,    39,
+    45,    45,    45,    37,    45,    45,    45,    45,    45,    45,
+    45,    45,    45,    45,    45,    45,    47,    47,    47,    41,
+    47,    47,    47,    47,    47,    47,    47,    47,    47,    47,
+    47,    47,     5,    38,    38,     5,     5,     5,     5,     5,
+     5,     5,     5,     5,     5,     5,     5,    44,    46,    46,
+    44,    44,    44,    44,    44,    44,    44,    44,    44,    44,
+    44,    44,     8,     8,     8,     8,     8,     8,     8,     8,
+     8,     8,     8,     8,     8,     8,    26,    26,    26,    26,
+    26,    26,    26,    26,    26,    26,    26,    26,    26,    26,
+    43,    48,    43,    43,    43,    43,    43,    43,    43,    43,
+    43,    43,    43,    43,    53,    49,    53,    53,    53,    53,
+    53,    53,    53,    53,    53,    53,    53,    53,    28,    33,
+    28,    33,    55,    55,    58,    58,    54,    56,    57,    60,
+    63,    64,    66,    67,    68,    71,    73 ]
 
 racc_action_pointer = [
-    18,    11,    25,    28,    15,   nil,    17,   nil,    35,    55,
-    93,   nil,    94,   nil,    90,   nil,    46,    69,    42,    28,
-    39,   nil,    71,    73,   nil,   nil,    75,    77,    96,   nil,
-   nil,    97,    60,    93,    99,    -3,    92,    -2,    93,    42,
-   102,   103,   104,   105,   nil,   nil,    77,   106,    81,    83,
-   nil,   104,   nil,    94,   nil,   nil,   nil,   nil,   nil,   106,
-    -2,   nil,   nil,   nil,   nil,   nil,   nil,   nil,   nil,   nil,
-   nil,    85,    87,   nil,   110,   111,     8,   nil,    26,    32,
-   112,   113,   nil,   nil,    89,    -3,   nil,   nil,   nil,   nil,
-   nil,   nil,   nil,   nil,   nil,   nil,   114,   nil,   nil,   nil,
-   104,   nil,    61,   108,    51,   106,    64,   110,    55,   108,
-    67,   112,   nil ]
+    -3,     3,    13,   nil,    14,   108,   nil,   nil,   137,   nil,
+   nil,   nil,   nil,   nil,   nil,   nil,   nil,   nil,   nil,   nil,
+   nil,   nil,    35,   nil,   nil,    46,   151,   nil,   193,   nil,
+   nil,   nil,   nil,   194,    29,    62,    45,    78,   111,    61,
+   nil,    94,   nil,   165,   123,    77,   126,    93,   166,   183,
+   nil,   nil,   nil,   179,   201,   200,   202,   206,   202,   nil,
+   204,   nil,   nil,   205,   209,   nil,   207,   211,   209,   nil,
+   nil,   210,   nil,   211,   nil,   nil,   nil ]
 
 racc_action_default = [
-    -3,   -64,    -1,    -2,   -64,    -6,   -64,   -16,   -64,   -64,
-   -64,   -15,   -64,    -7,   -64,    -4,   -20,   -20,   -17,   -56,
-   -37,   113,   -20,   -20,   -14,    -5,   -20,   -20,   -64,   -18,
-   -19,   -64,   -17,   -64,   -64,   -64,   -64,   -64,   -64,   -64,
-   -64,   -64,   -64,   -64,    -8,   -10,   -64,   -64,   -20,   -20,
-   -31,   -64,   -35,   -38,   -46,   -54,   -55,   -61,   -62,   -44,
-   -43,   -57,   -58,   -36,   -59,   -60,    -9,   -11,   -12,   -13,
-   -25,   -20,   -20,   -32,   -64,   -64,   -64,   -63,   -64,   -64,
-   -64,   -64,   -27,   -29,   -20,   -24,   -50,   -52,   -53,   -39,
-   -40,   -45,   -41,   -42,   -28,   -30,   -64,   -21,   -22,   -23,
-   -64,   -26,   -24,   -64,   -24,   -64,   -24,   -64,   -24,   -64,
-   -24,   -64,   -47 ]
+    -2,   -42,    -1,    -3,   -42,   -42,    -7,    -8,   -42,   -28,
+   -30,   -31,   -32,   -33,   -34,   -35,   -36,   -37,   -38,   -39,
+   -40,   -41,   -42,    -4,    -5,   -42,   -42,    -9,   -42,   -29,
+    77,    -6,   -10,   -42,   -19,   -42,   -19,   -42,   -42,   -20,
+   -21,   -42,   -24,   -42,   -42,   -19,   -42,   -19,   -42,   -42,
+   -22,   -23,   -25,   -42,   -42,   -42,   -42,   -42,   -42,   -11,
+   -42,   -26,   -27,   -42,   -42,   -13,   -42,   -42,   -42,   -12,
+   -15,   -42,   -14,   -42,   -18,   -16,   -17 ]
 
 racc_goto_table = [
-    28,    31,    55,    56,    59,     1,    40,    41,     2,    16,
-    42,    43,    22,    17,     3,    32,    23,    26,   nil,   nil,
-     6,    27,     9,    14,   nil,   nil,   nil,   nil,   nil,   nil,
-   nil,   nil,    74,    75,   nil,   nil,    48,   nil,    33,   nil,
-    49,   100,   nil,    88,    86,    89,    93,   nil,   nil,    71,
-   nil,   nil,    46,    72,   nil,    80,    81,   nil,   103,   nil,
-   105,   nil,   107,   nil,   109,   nil,   111,   nil,    96 ]
+    29,    38,     8,    46,     8,     1,     3,    26,    23,     2,
+    50,   nil,    55,   nil,    58,   nil,   nil,   nil,    29,   nil,
+   nil,   nil,   nil,   nil,   nil,   nil,   nil,   nil,   nil,   nil,
+   nil,   nil,   nil,   nil,   nil,    29,   nil,   nil,   nil,   nil,
+   nil,   nil,   nil,   nil,   nil,    29,    53 ]
 
 racc_goto_check = [
-     6,     6,    13,    12,    12,     1,     6,     6,     2,     5,
-     6,     6,     5,     7,     3,    10,     7,     5,   nil,   nil,
-     4,     7,     4,     4,   nil,   nil,   nil,   nil,   nil,   nil,
-   nil,   nil,     6,     6,   nil,   nil,     5,   nil,     4,   nil,
-     7,     8,   nil,    13,    12,    13,    13,   nil,   nil,     5,
-   nil,   nil,     4,     7,   nil,     6,     6,   nil,     8,   nil,
-     8,   nil,     8,   nil,     8,   nil,     8,   nil,     6 ]
+     9,     6,     5,     6,     5,     1,     3,     5,     3,     2,
+     8,   nil,     6,   nil,     6,   nil,   nil,   nil,     9,   nil,
+   nil,   nil,   nil,   nil,   nil,   nil,   nil,   nil,   nil,   nil,
+   nil,   nil,   nil,   nil,   nil,     9,   nil,   nil,   nil,   nil,
+   nil,   nil,   nil,   nil,   nil,     9,     5 ]
 
 racc_goto_pointer = [
-   nil,     5,     8,    14,    20,     3,   -16,     7,   -44,   nil,
-    -3,   nil,   -32,   -33 ]
+   nil,     5,     9,     6,   nil,     2,   -33,   nil,   -29,    -8 ]
 
 racc_goto_default = [
-   nil,   nil,   nil,   nil,   nil,   nil,   nil,   nil,   nil,    18,
-   nil,    20,   nil,   nil ]
+   nil,   nil,   nil,   nil,     7,    43,   nil,    39,    40,     9 ]
 
 racc_reduce_table = [
   0, 0, :racc_error,
-  1, 19, :_reduce_1,
-  1, 19, :_reduce_2,
-  0, 19, :_reduce_3,
+  1, 20, :_reduce_1,
+  0, 20, :_reduce_2,
+  1, 21, :_reduce_3,
   2, 21, :_reduce_4,
-  3, 21, :_reduce_5,
-  1, 21, :_reduce_6,
-  2, 21, :_reduce_7,
-  4, 20, :_reduce_8,
-  5, 20, :_reduce_9,
-  4, 20, :_reduce_10,
-  5, 20, :_reduce_11,
-  5, 20, :_reduce_12,
-  5, 20, :_reduce_13,
-  3, 20, :_reduce_14,
-  2, 20, :_reduce_15,
-  1, 22, :_reduce_16,
-  0, 22, :_reduce_17,
-  1, 24, :_reduce_18,
-  1, 24, :_reduce_19,
-  0, 24, :_reduce_20,
+  2, 22, :_reduce_5,
+  3, 22, :_reduce_6,
+  1, 22, :_reduce_7,
+  1, 22, :_reduce_8,
+  2, 22, :_reduce_9,
+  3, 22, :_reduce_10,
+  6, 23, :_reduce_11,
+  7, 23, :_reduce_12,
+  7, 23, :_reduce_13,
+  8, 23, :_reduce_14,
+  7, 23, :_reduce_15,
+  8, 23, :_reduce_16,
+  9, 23, :_reduce_17,
+  8, 23, :_reduce_18,
+  0, 25, :_reduce_19,
+  1, 25, :_reduce_20,
   1, 26, :_reduce_21,
-  1, 26, :_reduce_22,
-  1, 26, :_reduce_23,
-  0, 26, :_reduce_24,
-  4, 25, :_reduce_25,
-  7, 27, :_reduce_26,
-  4, 28, :_reduce_27,
-  5, 28, :_reduce_28,
-  4, 28, :_reduce_29,
-  5, 28, :_reduce_30,
-  2, 28, :_reduce_31,
-  3, 28, :_reduce_32,
-  1, 24, :_reduce_33,
-  0, 24, :_reduce_34,
-  3, 23, :_reduce_35,
-  3, 23, :_reduce_36,
-  1, 23, :_reduce_37,
-  3, 23, :_reduce_38,
-  5, 23, :_reduce_39,
-  5, 23, :_reduce_40,
-  5, 23, :_reduce_41,
-  5, 23, :_reduce_42,
-  3, 23, :_reduce_43,
-  3, 23, :_reduce_44,
-  5, 23, :_reduce_45,
-  3, 23, :_reduce_46,
-  17, 23, :_reduce_47,
-  13, 23, :_reduce_48,
-  9, 23, :_reduce_49,
-  5, 23, :_reduce_50,
-  5, 23, :_reduce_51,
-  5, 23, :_reduce_52,
-  5, 23, :_reduce_53,
-  3, 23, :_reduce_54,
-  3, 23, :_reduce_55,
-  1, 23, :_reduce_56,
-  3, 29, :_reduce_57,
-  3, 29, :_reduce_58,
-  3, 29, :_reduce_59,
-  3, 29, :_reduce_60,
-  1, 31, :_reduce_61,
-  1, 31, :_reduce_62,
-  2, 30, :_reduce_63 ]
+  2, 26, :_reduce_22,
+  2, 27, :_reduce_23,
+  1, 27, :_reduce_24,
+  2, 27, :_reduce_25,
+  3, 27, :_reduce_26,
+  3, 27, :_reduce_27,
+  1, 24, :_reduce_28,
+  2, 24, :_reduce_29,
+  1, 28, :_reduce_30,
+  1, 28, :_reduce_31,
+  1, 28, :_reduce_32,
+  1, 28, :_reduce_33,
+  1, 28, :_reduce_34,
+  1, 28, :_reduce_35,
+  1, 28, :_reduce_36,
+  1, 28, :_reduce_37,
+  1, 28, :_reduce_38,
+  1, 28, :_reduce_39,
+  1, 28, :_reduce_40,
+  1, 28, :_reduce_41 ]
 
-racc_reduce_n = 64
+racc_reduce_n = 42
 
-racc_shift_n = 113
+racc_shift_n = 77
 
 racc_token_table = {
   false => 0,
   :error => 1,
-  :COMMENT => 2,
-  :NEWLINE => 3,
-  :LEADING_SPACE => 4,
-  :TRAILING_SPACE => 5,
-  :SPACE => 6,
-  :END => 7,
+  :END => 2,
+  :LEADING_SPACE => 3,
+  :COMMENT => 4,
+  :NEWLINE => 5,
+  :DO => 6,
+  :TRAILING_SPACE => 7,
   :IDENTIFIER => 8,
-  :DO => 9,
-  :PLUS => 10,
-  :NUMBER => 11,
-  :AT => 12,
-  :REGEX => 13,
+  :STRING => 9,
+  :NUMBER => 10,
+  :DURATION => 11,
+  :REGEX => 12,
+  :SPACE => 13,
   :COMMA => 14,
-  :STRING => 15,
-  :WORD => 16,
-  :TIME_UNIT => 17 }
+  :PLUS => 15,
+  :MINUS => 16,
+  :AT => 17,
+  :TIME_UNIT => 18 }
 
-racc_nt_base = 18
+racc_nt_base = 19
 
 racc_use_result_var = true
 
@@ -284,36 +530,33 @@ Ractor.make_shareable(Racc_arg) if defined?(Ractor)
 Racc_token_to_s_table = [
   "$end",
   "error",
+  "END",
+  "LEADING_SPACE",
   "COMMENT",
   "NEWLINE",
-  "LEADING_SPACE",
-  "TRAILING_SPACE",
-  "SPACE",
-  "END",
-  "IDENTIFIER",
   "DO",
-  "PLUS",
-  "NUMBER",
-  "AT",
-  "REGEX",
-  "COMMA",
+  "TRAILING_SPACE",
+  "IDENTIFIER",
   "STRING",
-  "WORD",
+  "NUMBER",
+  "DURATION",
+  "REGEX",
+  "SPACE",
+  "COMMA",
+  "PLUS",
+  "MINUS",
+  "AT",
   "TIME_UNIT",
   "$start",
-  "tape",
-  "commands",
-  "metadata",
-  "leading_space",
-  "command",
-  "trailing_space",
-  "block",
-  "optional_space",
-  "block_start",
-  "block_commands",
-  "key_combo",
-  "duration",
-  "string" ]
+  "document",
+  "lines",
+  "line",
+  "group",
+  "line_tokens",
+  "group_body",
+  "group_lines",
+  "group_line",
+  "line_token" ]
 Ractor.make_shareable(Racc_token_to_s_table) if defined?(Ractor)
 
 Racc_debug_parser = false
@@ -322,843 +565,421 @@ Racc_debug_parser = false
 
 # reduce 0 omitted
 
-module_eval(<<'.,.,', 'demotape.y', 2)
+module_eval(<<'.,.,', 'demotape.y', 11)
   def _reduce_1(val, _values, result)
-     result = val[0]
+     result = val[0].flatten.compact
     result
   end
 .,.,
 
-module_eval(<<'.,.,', 'demotape.y', 3)
+module_eval(<<'.,.,', 'demotape.y', 12)
   def _reduce_2(val, _values, result)
      result = []
     result
   end
 .,.,
 
-module_eval(<<'.,.,', 'demotape.y', 4)
-  def _reduce_3(val, _values, result)
-     result = []
-    result
-  end
-.,.,
-
-module_eval(<<'.,.,', 'demotape.y', 6)
-  def _reduce_4(val, _values, result)
-     result = nil
-    result
-  end
-.,.,
-
-module_eval(<<'.,.,', 'demotape.y', 7)
-  def _reduce_5(val, _values, result)
-     result = nil
-    result
-  end
-.,.,
-
-module_eval(<<'.,.,', 'demotape.y', 8)
-  def _reduce_6(val, _values, result)
-     result = nil
-    result
-  end
-.,.,
-
-module_eval(<<'.,.,', 'demotape.y', 9)
-  def _reduce_7(val, _values, result)
-     result = nil
-    result
-  end
-.,.,
-
-module_eval(<<'.,.,', 'demotape.y', 11)
-  def _reduce_8(val, _values, result)
-     result = [val[1]]
-    result
-  end
-.,.,
-
-module_eval(<<'.,.,', 'demotape.y', 12)
-  def _reduce_9(val, _values, result)
-     result = val[0] << val[2]
-    result
-  end
-.,.,
-
-module_eval(<<'.,.,', 'demotape.y', 13)
-  def _reduce_10(val, _values, result)
-     result = [val[1]]
-    result
-  end
-.,.,
-
 module_eval(<<'.,.,', 'demotape.y', 14)
-  def _reduce_11(val, _values, result)
-     result = val[0] << val[2]
+  def _reduce_3(val, _values, result)
+     result = val[0]
     result
   end
 .,.,
 
 module_eval(<<'.,.,', 'demotape.y', 15)
-  def _reduce_12(val, _values, result)
-     result = [val[2]]
+  def _reduce_4(val, _values, result)
+     result = val[0] + val[1]
     result
   end
 .,.,
 
-module_eval(<<'.,.,', 'demotape.y', 16)
-  def _reduce_13(val, _values, result)
-     result = [val[2]]
-    result
-  end
-.,.,
+module_eval(<<'.,.,', 'demotape.y', 19)
+  def _reduce_5(val, _values, result)
+              result = [
+            make_token(:comment, val[0], index_for_value(val[0])),
+            make_token(:newline, val[1], index_for_value(val[1]))
+          ]
 
-module_eval(<<'.,.,', 'demotape.y', 17)
-  def _reduce_14(val, _values, result)
-     result = val[0]
-    result
-  end
-.,.,
-
-module_eval(<<'.,.,', 'demotape.y', 18)
-  def _reduce_15(val, _values, result)
-     result = val[0]
-    result
-  end
-.,.,
-
-module_eval(<<'.,.,', 'demotape.y', 20)
-  def _reduce_16(val, _values, result)
-     result = nil
-    result
-  end
-.,.,
-
-module_eval(<<'.,.,', 'demotape.y', 21)
-  def _reduce_17(val, _values, result)
-     result = nil
-    result
-  end
-.,.,
-
-module_eval(<<'.,.,', 'demotape.y', 23)
-  def _reduce_18(val, _values, result)
-     result = nil
-    result
-  end
-.,.,
-
-module_eval(<<'.,.,', 'demotape.y', 24)
-  def _reduce_19(val, _values, result)
-     result = nil
     result
   end
 .,.,
 
 module_eval(<<'.,.,', 'demotape.y', 25)
-  def _reduce_20(val, _values, result)
-     result = nil
+  def _reduce_6(val, _values, result)
+              result = [
+            make_token(:leading_space, val[0], index_for_value(val[0])),
+            make_token(:comment, val[1], index_for_value(val[1])),
+            make_token(:newline, val[2], index_for_value(val[2]))
+          ]
+
     result
   end
 .,.,
 
-module_eval(<<'.,.,', 'demotape.y', 27)
+module_eval(<<'.,.,', 'demotape.y', 31)
+  def _reduce_7(val, _values, result)
+     result = [make_token(:newline, val[0], index_for_value(val[0]))]
+    result
+  end
+.,.,
+
+module_eval(<<'.,.,', 'demotape.y', 32)
+  def _reduce_8(val, _values, result)
+     result = [val[0]]
+    result
+  end
+.,.,
+
+module_eval(<<'.,.,', 'demotape.y', 34)
+  def _reduce_9(val, _values, result)
+              tokens, start_idx = val[0]
+          result = [
+            { type: :command, tokens: tokens, line: line_for_token_at(start_idx), column: column_for_token_at(start_idx) },
+            make_token(:newline, val[1], index_for_value(val[1]))
+          ]
+
+    result
+  end
+.,.,
+
+module_eval(<<'.,.,', 'demotape.y', 41)
+  def _reduce_10(val, _values, result)
+              idx_lead = index_for_value(val[0])
+          tokens, _ = val[1]
+          result = [
+            { type: :command, tokens: [make_token(:leading_space, val[0], idx_lead)] + tokens, line: line_for_token_at(idx_lead), column: column_for_token_at(idx_lead) },
+            make_token(:newline, val[2], index_for_value(val[2]))
+          ]
+
+    result
+  end
+.,.,
+
+module_eval(<<'.,.,', 'demotape.y', 51)
+  def _reduce_11(val, _values, result)
+               tokens, start_idx = val[0]
+           idx_do = index_for_value(val[1])
+           idx_nl = index_for_value(val[2])
+           result = {
+             type: :group,
+             tokens: tokens + [make_token(:keyword, val[1], idx_do)],
+             children: [make_token(:newline, val[2], idx_nl)] + val[3],
+             line: line_for_token_at(start_idx),
+             column: column_for_token_at(start_idx)
+           }
+
+    result
+  end
+.,.,
+
+module_eval(<<'.,.,', 'demotape.y', 63)
+  def _reduce_12(val, _values, result)
+               tokens, start_idx = val[0]
+           idx_do = index_for_value(val[1])
+           idx_nl = index_for_value(val[2])
+           # Discard the LEADING_SPACE before END (val[4])
+           result = {
+             type: :group,
+             tokens: tokens + [make_token(:keyword, val[1], idx_do)],
+             children: [make_token(:newline, val[2], idx_nl)] + val[3],
+             line: line_for_token_at(start_idx),
+             column: column_for_token_at(start_idx)
+           }
+
+    result
+  end
+.,.,
+
+module_eval(<<'.,.,', 'demotape.y', 76)
+  def _reduce_13(val, _values, result)
+               idx_lead = index_for_value(val[0])
+           tokens, _ = val[1]
+           idx_do = index_for_value(val[2])
+           idx_nl = index_for_value(val[3])
+           result = {
+             type: :group,
+             tokens: [make_token(:leading_space, val[0], idx_lead)] + tokens + [make_token(:keyword, val[2], idx_do)],
+             children: [make_token(:newline, val[3], idx_nl)] + val[4],
+             line: line_for_token_at(idx_lead),
+             column: column_for_token_at(idx_lead)
+           }
+
+    result
+  end
+.,.,
+
+module_eval(<<'.,.,', 'demotape.y', 89)
+  def _reduce_14(val, _values, result)
+               idx_lead = index_for_value(val[0])
+           tokens, _ = val[1]
+           idx_do = index_for_value(val[2])
+           idx_nl = index_for_value(val[3])
+           # Discard the LEADING_SPACE before END (val[5])
+           result = {
+             type: :group,
+             tokens: [make_token(:leading_space, val[0], idx_lead)] + tokens + [make_token(:keyword, val[2], idx_do)],
+             children: [make_token(:newline, val[3], idx_nl)] + val[4],
+             line: line_for_token_at(idx_lead),
+             column: column_for_token_at(idx_lead)
+           }
+
+    result
+  end
+.,.,
+
+module_eval(<<'.,.,', 'demotape.y', 103)
+  def _reduce_15(val, _values, result)
+               tokens, start_idx = val[0]
+           idx_do = index_for_value(val[1])
+           idx_trail = index_for_value(val[2])
+           idx_nl = index_for_value(val[3])
+           result = {
+             type: :group,
+             tokens: tokens + [make_token(:keyword, val[1], idx_do), make_token(:trailing_space, val[2], idx_trail)],
+             children: [make_token(:newline, val[3], idx_nl)] + val[4],
+             line: line_for_token_at(start_idx),
+             column: column_for_token_at(start_idx)
+           }
+
+    result
+  end
+.,.,
+
+module_eval(<<'.,.,', 'demotape.y', 116)
+  def _reduce_16(val, _values, result)
+               tokens, start_idx = val[0]
+           idx_do = index_for_value(val[1])
+           idx_trail = index_for_value(val[2])
+           idx_nl = index_for_value(val[3])
+           # Discard the LEADING_SPACE before END (val[5])
+           result = {
+             type: :group,
+             tokens: tokens + [make_token(:keyword, val[1], idx_do), make_token(:trailing_space, val[2], idx_trail)],
+             children: [make_token(:newline, val[3], idx_nl)] + val[4],
+             line: line_for_token_at(start_idx),
+             column: column_for_token_at(start_idx)
+           }
+
+    result
+  end
+.,.,
+
+module_eval(<<'.,.,', 'demotape.y', 130)
+  def _reduce_17(val, _values, result)
+               idx_lead = index_for_value(val[0])
+           tokens, _ = val[1]
+           idx_do = index_for_value(val[2])
+           idx_trail = index_for_value(val[3])
+           idx_nl = index_for_value(val[4])
+           # Discard the LEADING_SPACE before END (val[6])
+           result = {
+             type: :group,
+             tokens: [make_token(:leading_space, val[0], idx_lead)] + tokens + [make_token(:keyword, val[2], idx_do), make_token(:trailing_space, val[3], idx_trail)],
+             children: [make_token(:newline, val[4], idx_nl)] + val[5],
+             line: line_for_token_at(idx_lead),
+             column: column_for_token_at(idx_lead)
+           }
+
+    result
+  end
+.,.,
+
+module_eval(<<'.,.,', 'demotape.y', 145)
+  def _reduce_18(val, _values, result)
+               idx_lead = index_for_value(val[0])
+           tokens, _ = val[1]
+           idx_do = index_for_value(val[2])
+           idx_trail = index_for_value(val[3])
+           idx_nl = index_for_value(val[4])
+           result = {
+             type: :group,
+             tokens: [make_token(:leading_space, val[0], idx_lead)] + tokens + [make_token(:keyword, val[2], idx_do), make_token(:trailing_space, val[3], idx_trail)],
+             children: [make_token(:newline, val[4], idx_nl)] + val[5],
+             line: line_for_token_at(idx_lead),
+             column: column_for_token_at(idx_lead)
+           }
+
+    result
+  end
+.,.,
+
+module_eval(<<'.,.,', 'demotape.y', 161)
+  def _reduce_19(val, _values, result)
+     result = []
+    result
+  end
+.,.,
+
+module_eval(<<'.,.,', 'demotape.y', 162)
+  def _reduce_20(val, _values, result)
+     result = val[0].flatten.compact
+    result
+  end
+.,.,
+
+module_eval(<<'.,.,', 'demotape.y', 164)
   def _reduce_21(val, _values, result)
      result = val[0]
     result
   end
 .,.,
 
-module_eval(<<'.,.,', 'demotape.y', 28)
+module_eval(<<'.,.,', 'demotape.y', 165)
   def _reduce_22(val, _values, result)
-     result = val[0]
+     result = val[0] + val[1]
     result
   end
 .,.,
 
-module_eval(<<'.,.,', 'demotape.y', 29)
+module_eval(<<'.,.,', 'demotape.y', 169)
   def _reduce_23(val, _values, result)
-     result = val[0]
+                    result = [
+                  make_token(:comment, val[0], index_for_value(val[0])),
+                  make_token(:newline, val[1], index_for_value(val[1]))
+                ]
+
     result
   end
 .,.,
 
-module_eval(<<'.,.,', 'demotape.y', 30)
+module_eval(<<'.,.,', 'demotape.y', 174)
   def _reduce_24(val, _values, result)
-     result = nil
+     result = [make_token(:newline, val[0], index_for_value(val[0]))]
     result
   end
 .,.,
 
-module_eval(<<'.,.,', 'demotape.y', 33)
+module_eval(<<'.,.,', 'demotape.y', 176)
   def _reduce_25(val, _values, result)
-               cmd = val[0]
-           cmd.children.replace(val[1])
-           result = cmd.prepare!
+                    tokens, start_idx = val[0]
+                result = [
+                  { type: :command, tokens: tokens, line: line_for_token_at(start_idx), column: column_for_token_at(start_idx) },
+                  make_token(:newline, val[1], index_for_value(val[1]))
+                ]
 
     result
   end
 .,.,
 
-module_eval(<<'.,.,', 'demotape.y', 39)
+module_eval(<<'.,.,', 'demotape.y', 183)
   def _reduce_26(val, _values, result)
-               # When this rule is being reduced:
-           # val[0] = first IDENTIFIER value
-           # val[1] = first SPACE value
-           # val[2] = second IDENTIFIER value
-           # val[3] = second SPACE value
-           # val[4] = DO value
-           # val[5] = trailing_space (nil or SPACE value)
-           # val[6] = NEWLINE value
-           
-           # @token_index is AFTER consuming NEWLINE
-           # We need to count backwards to find each token's position
-           
-           # trailing_space can be 0 or 1 token
-           trailing_consumed = val[5].nil? ? 0 : 1
-           
-           # Working backwards from @token_index:
-           # @token_index points to NEXT token (after NEWLINE)
-           # @token_index - 1 = NEWLINE
-           # @token_index - 2 = trailing_space (if present) or DO (if not)
-           # So: @token_index - 1 - trailing_consumed = DO
-           #     @token_index - 2 - trailing_consumed = SPACE before DO
-           #     @token_index - 3 - trailing_consumed = second IDENTIFIER
-           #     @token_index - 4 - trailing_consumed = first SPACE
-           #     @token_index - 5 - trailing_consumed = first IDENTIFIER
-           
-           identifier_index = @token_index - 6 - trailing_consumed
-           space1_index = @token_index - 5 - trailing_consumed
-           name_index = @token_index - 4 - trailing_consumed
-           space2_index = @token_index - 3 - trailing_consumed
-           do_index = @token_index - 2 - trailing_consumed
-           
-           @command_start_index = identifier_index
-           
-           tokens = [
-             make_token(:identifier, val[0], identifier_index),
-             make_token(:space, val[1], space1_index),
-             make_token(:identifier, val[2], name_index),
-             make_token(:space, val[3], space2_index),
-             make_token(:keyword, val[4], do_index)
-           ]
-
-           cmd = DemoTape::Command.new(val[0], val[2], children: [])
-           cmd.tokens = tokens
-           result = attach_location(cmd)
+                    idx_lead = index_for_value(val[0])
+                tokens, _ = val[1]
+                result = [
+                  { type: :command, tokens: [make_token(:leading_space, val[0], idx_lead)] + tokens, line: line_for_token_at(idx_lead), column: column_for_token_at(idx_lead) },
+                  make_token(:newline, val[2], index_for_value(val[2]))
+                ]
 
     result
   end
 .,.,
 
-module_eval(<<'.,.,', 'demotape.y', 85)
+module_eval(<<'.,.,', 'demotape.y', 191)
   def _reduce_27(val, _values, result)
-     result = [val[1]]
-    result
-  end
-.,.,
-
-module_eval(<<'.,.,', 'demotape.y', 86)
-  def _reduce_28(val, _values, result)
-     result = val[0] << val[2]
-    result
-  end
-.,.,
-
-module_eval(<<'.,.,', 'demotape.y', 87)
-  def _reduce_29(val, _values, result)
-     result = [val[1]]
-    result
-  end
-.,.,
-
-module_eval(<<'.,.,', 'demotape.y', 88)
-  def _reduce_30(val, _values, result)
-     result = val[0] << val[2]
-    result
-  end
-.,.,
-
-module_eval(<<'.,.,', 'demotape.y', 89)
-  def _reduce_31(val, _values, result)
-     result = []
-    result
-  end
-.,.,
-
-module_eval(<<'.,.,', 'demotape.y', 90)
-  def _reduce_32(val, _values, result)
-     result = val[0]
-    result
-  end
-.,.,
-
-module_eval(<<'.,.,', 'demotape.y', 92)
-  def _reduce_33(val, _values, result)
-     result = nil
-    result
-  end
-.,.,
-
-module_eval(<<'.,.,', 'demotape.y', 93)
-  def _reduce_34(val, _values, result)
-     result = nil
-    result
-  end
-.,.,
-
-module_eval(<<'.,.,', 'demotape.y', 96)
-  def _reduce_35(val, _values, result)
-                 space_index = @token_index - 2
-             line_info = @lexer.line_map[space_index] || {}
-             error_msg = "Unexpected token \"SPACE\" at #{@file}:#{line_info[:line]}:#{line_info[:column]}:\n"
-             error_msg += "  #{line_info[:content]}\n"
-             error_msg += "  #{' ' * (line_info[:column] - 1)}^"
-             raise DemoTape::ParseError, error_msg
-
-    result
-  end
-.,.,
-
-module_eval(<<'.,.,', 'demotape.y', 104)
-  def _reduce_36(val, _values, result)
-                 @command_start_index = @last_key_index
-             keys = val[0][:keys]
-             key_tokens = val[0][:tokens]
-             command_name = keys.shift
-
-             tokens = key_tokens + [
-               make_token(:space, val[1], @token_index - 2),
-               make_token(:number, val[2], @token_index - 1)
-             ]
-
-             cmd = DemoTape::Command.new(command_name, "", keys:, count: val[2])
-             cmd.tokens = tokens
-             result = attach_location(cmd).prepare!
-
-    result
-  end
-.,.,
-
-module_eval(<<'.,.,', 'demotape.y', 119)
-  def _reduce_37(val, _values, result)
-                 @command_start_index = @last_key_index
-             keys = val[0][:keys]
-             key_tokens = val[0][:tokens]
-             command_name = keys.shift
-
-             cmd = DemoTape::Command.new(command_name, "", keys:)
-             cmd.tokens = key_tokens
-             result = attach_location(cmd).prepare!
-
-    result
-  end
-.,.,
-
-module_eval(<<'.,.,', 'demotape.y', 129)
-  def _reduce_38(val, _values, result)
-                 @command_start_index = @token_index - 4
-             duration_index = @token_index - 2
-             space_index = @token_index - 3
-
-             tokens = [
-               make_token(:identifier, val[0], @token_index - 4),
-               make_token(:space, val[1], space_index),
-               make_token(:number, val[2], @token_index - 2)
-             ]
-
-             # Duration commands (Sleep, Wait) treat bare numbers as seconds
-             # Key commands treat numbers as repeat counts
-             if ["Sleep", "Wait"].include?(val[0])
-               cmd = DemoTape::Command.new(val[0], "#{val[2]}s")
-               cmd.tokens = tokens
-               result = attach_location(cmd, duration_index: duration_index).prepare!
-             else
-               cmd = DemoTape::Command.new(val[0], "", count: val[2])
-               cmd.tokens = tokens
-               result = attach_location(cmd).prepare!
-             end
-
-    result
-  end
-.,.,
-
-module_eval(<<'.,.,', 'demotape.y', 152)
-  def _reduce_39(val, _values, result)
-                 @command_start_index = @token_index - 6
-             duration_index = @token_index - 3  # TIME_UNIT position
-
-             tokens = [
-               make_token(:identifier, val[0], @token_index - 6),
-               make_token(:operator, "@", @token_index - 5),
-               make_token(:duration, val[2], @token_index - 4),
-               make_token(:space, val[3], @token_index - 2),
-               make_token(:string, val[4], @token_index - 1)
-             ]
-
-             cmd = DemoTape::Command.new(val[0], val[4], duration: val[2])
-             cmd.tokens = tokens
-             result = attach_location(cmd, duration_index:).prepare!
-
-    result
-  end
-.,.,
-
-module_eval(<<'.,.,', 'demotape.y', 168)
-  def _reduce_40(val, _values, result)
-                 @command_start_index = @token_index - 6
-             duration_index = @token_index - 3  # TIME_UNIT position
-
-             tokens = [
-               make_token(:identifier, val[0], @token_index - 6),
-               make_token(:operator, "@", @token_index - 5),
-               make_token(:duration, val[2], @token_index - 4),
-               make_token(:space, val[3], @token_index - 2),
-               make_token(:number, val[4], @token_index - 1)
-             ]
-
-             cmd = DemoTape::Command.new(val[0], "", duration: val[2], count: val[4])
-             cmd.tokens = tokens
-             result = attach_location(cmd, duration_index:).prepare!
-
-    result
-  end
-.,.,
-
-module_eval(<<'.,.,', 'demotape.y', 184)
-  def _reduce_41(val, _values, result)
-                 @command_start_index = @token_index - 5
-             duration_index = @token_index - 3
-
-             tokens = [
-               make_token(:identifier, val[0], @token_index - 5),
-               make_token(:operator, "@", @token_index - 4),
-               make_token(:number, val[2], @token_index - 3),
-               make_token(:space, val[3], @token_index - 2),
-               make_token(:number, val[4], @token_index - 1)
-             ]
-
-             cmd = DemoTape::Command.new(val[0], "", duration: "#{val[2]}s", count: val[4])
-             cmd.tokens = tokens
-             result = attach_location(cmd, duration_index:).prepare!
+                    result = [
+                  make_token(:leading_space, val[0], index_for_value(val[0])),
+                  make_token(:comment, val[1], index_for_value(val[1])),
+                  make_token(:newline, val[2], index_for_value(val[2]))
+                ]
 
     result
   end
 .,.,
 
 module_eval(<<'.,.,', 'demotape.y', 200)
-  def _reduce_42(val, _values, result)
-                 @command_start_index = @token_index - 5
-             duration_index = @token_index - 3
-
-             tokens = [
-               make_token(:identifier, val[0], @token_index - 5),
-               make_token(:operator, "@", @token_index - 4),
-               make_token(:number, val[2], @token_index - 3),
-               make_token(:space, val[3], @token_index - 2),
-               make_token(:string, val[4], @token_index - 1)
-             ]
-
-             cmd = DemoTape::Command.new(val[0], val[4], duration: "#{val[2]}s")
-             cmd.tokens = tokens
-             result = attach_location(cmd, duration_index:).prepare!
-
+  def _reduce_28(val, _values, result)
+     result = [[val[0][:token]], val[0][:index]]
     result
   end
 .,.,
 
-module_eval(<<'.,.,', 'demotape.y', 216)
-  def _reduce_43(val, _values, result)
-                 @command_start_index = @token_index - 3
-             duration_index = @token_index - 1
-
-             tokens = [
-               make_token(:identifier, val[0], @token_index - 3),
-               make_token(:operator, "@", @token_index - 2),
-               make_token(:number, val[2], @token_index - 1)
-             ]
-
-             cmd = DemoTape::Command.new(val[0], "", duration: "#{val[2]}s")
-             cmd.tokens = tokens
-             result = attach_location(cmd, duration_index:).prepare!
-
+module_eval(<<'.,.,', 'demotape.y', 201)
+  def _reduce_29(val, _values, result)
+     result = [val[0][0] << val[1][:token], val[0][1]]
     result
   end
 .,.,
 
-module_eval(<<'.,.,', 'demotape.y', 230)
-  def _reduce_44(val, _values, result)
-                 @command_start_index = @token_index - 4
-             duration_index = @token_index - 1  # TIME_UNIT position
-
-             tokens = [
-               make_token(:identifier, val[0], @token_index - 4),
-               make_token(:operator, "@", @token_index - 3),
-               make_token(:duration, val[2], @token_index - 2)
-             ]
-
-             cmd = DemoTape::Command.new(val[0], "", duration: val[2])
-             cmd.tokens = tokens
-             result = attach_location(cmd, duration_index:).prepare!
-
+module_eval(<<'.,.,', 'demotape.y', 203)
+  def _reduce_30(val, _values, result)
+     idx = index_for_value(val[0]); result = { token: make_token(:identifier, val[0], idx), index: idx }
     result
   end
 .,.,
 
-module_eval(<<'.,.,', 'demotape.y', 244)
-  def _reduce_45(val, _values, result)
-                 @command_start_index = @token_index - 6
-             duration_index = @token_index - 3  # TIME_UNIT position
-             regex_index = @token_index - 1
-
-             begin
-               Regexp.new(val[4])
-             rescue RegexpError => e
-               line_info = @lexer.line_map[regex_index] || {}
-               error_msg = "Invalid regex: #{e.message} at #{@file}:#{line_info[:line]}:#{line_info[:column]}:\n"
-               error_msg += "  #{line_info[:content]}\n"
-               error_msg += "  #{' ' * (line_info[:column] - 1)}^"
-               raise DemoTape::ParseError, error_msg
-             end
-
-             tokens = [
-               make_token(:identifier, val[0], @token_index - 6),
-               make_token(:operator, "@", @token_index - 5),
-               make_token(:duration, val[2], @token_index - 4),
-               make_token(:space, val[3], @token_index - 2),
-               make_token(:regex, val[4], regex_index)
-             ]
-
-             cmd = DemoTape::Command.new(val[0], val[4], duration: val[2])
-             cmd.tokens = tokens
-             result = attach_location(cmd, duration_index:).prepare!
-
+module_eval(<<'.,.,', 'demotape.y', 204)
+  def _reduce_31(val, _values, result)
+     idx = index_for_value(val[0]); result = { token: make_token(:string, val[0], idx), index: idx }
     result
   end
 .,.,
 
-module_eval(<<'.,.,', 'demotape.y', 271)
-  def _reduce_46(val, _values, result)
-                 @command_start_index = @token_index - 3
-             regex_index = @token_index - 1
-
-             begin
-               Regexp.new(val[2])
-             rescue RegexpError => e
-               line_info = @lexer.line_map[regex_index] || {}
-               error_msg = "Invalid regex: #{e.message} at #{@file}:#{line_info[:line]}:#{line_info[:column]}:\n"
-               error_msg += "  #{line_info[:content]}\n"
-               error_msg += "  #{' ' * (line_info[:column] - 1)}^"
-               raise DemoTape::ParseError, error_msg
-             end
-
-             tokens = [
-               make_token(:identifier, val[0], @token_index - 3),
-               make_token(:space, val[1], @token_index - 2),
-               make_token(:regex, val[2], regex_index)
-             ]
-
-             cmd = DemoTape::Command.new(val[0], val[2])
-             cmd.tokens = tokens
-             result = attach_location(cmd).prepare!
-
+module_eval(<<'.,.,', 'demotape.y', 205)
+  def _reduce_32(val, _values, result)
+     idx = index_for_value(val[0]); result = { token: make_token(:number, val[0], idx), index: idx }
     result
   end
 .,.,
 
-module_eval(<<'.,.,', 'demotape.y', 295)
-  def _reduce_47(val, _values, result)
-                 @command_start_index = @token_index - 11
-
-             # Build tokens array - for optional spaces, just create simple tokens
-             tokens = []
-             tokens << make_token(:identifier, val[0], @token_index - 11)
-             tokens << make_token(:space, val[1], @token_index - 10)
-             tokens << make_token(:identifier, val[2], @token_index - 9)
-             tokens << make_token(:space, val[3], @token_index - 8)
-             tokens << make_token(:number, val[4], @token_index - 7)
-             tokens << DemoTape::Token::Space.new(val[5]) if val[5]
-             tokens << DemoTape::Token::Operator.new(",")
-             tokens << DemoTape::Token::Space.new(val[7]) if val[7]
-             tokens << make_token(:number, val[8], @token_index - 5)
-             tokens << DemoTape::Token::Space.new(val[9]) if val[9]
-             tokens << DemoTape::Token::Operator.new(",")
-             tokens << DemoTape::Token::Space.new(val[11]) if val[11]
-             tokens << make_token(:number, val[12], @token_index - 3)
-             tokens << DemoTape::Token::Space.new(val[13]) if val[13]
-             tokens << DemoTape::Token::Operator.new(",")
-             tokens << DemoTape::Token::Space.new(val[15]) if val[15]
-             tokens << make_token(:number, val[16], @token_index - 1)
-
-             cmd = DemoTape::Command.new(val[0], [val[4], val[8], val[12], val[16]], option: val[2])
-             cmd.tokens = tokens
-             result = attach_location(cmd).prepare!
-
+module_eval(<<'.,.,', 'demotape.y', 206)
+  def _reduce_33(val, _values, result)
+     idx = index_for_value(val[0]); result = { token: make_token(:duration, val[0], idx), index: idx }
     result
   end
 .,.,
 
-module_eval(<<'.,.,', 'demotape.y', 322)
-  def _reduce_48(val, _values, result)
-                 @command_start_index = @token_index - 9
-
-             tokens = []
-             tokens << make_token(:identifier, val[0], @token_index - 9)
-             tokens << make_token(:space, val[1], @token_index - 8)
-             tokens << make_token(:identifier, val[2], @token_index - 7)
-             tokens << make_token(:space, val[3], @token_index - 6)
-             tokens << make_token(:number, val[4], @token_index - 5)
-             tokens << DemoTape::Token::Space.new(val[5]) if val[5]
-             tokens << DemoTape::Token::Operator.new(",")
-             tokens << DemoTape::Token::Space.new(val[7]) if val[7]
-             tokens << make_token(:number, val[8], @token_index - 3)
-             tokens << DemoTape::Token::Space.new(val[9]) if val[9]
-             tokens << DemoTape::Token::Operator.new(",")
-             tokens << DemoTape::Token::Space.new(val[11]) if val[11]
-             tokens << make_token(:number, val[12], @token_index - 1)
-
-             cmd = DemoTape::Command.new(val[0], [val[4], val[8], val[12]], option: val[2])
-             cmd.tokens = tokens
-             result = attach_location(cmd).prepare!
-
+module_eval(<<'.,.,', 'demotape.y', 207)
+  def _reduce_34(val, _values, result)
+     idx = index_for_value(val[0]); result = { token: make_token(:regex, val[0], idx), index: idx }
     result
   end
 .,.,
 
-module_eval(<<'.,.,', 'demotape.y', 344)
-  def _reduce_49(val, _values, result)
-                 @command_start_index = @token_index - 7
-
-             tokens = []
-             tokens << make_token(:identifier, val[0], @token_index - 7)
-             tokens << make_token(:space, val[1], @token_index - 6)
-             tokens << make_token(:identifier, val[2], @token_index - 5)
-             tokens << make_token(:space, val[3], @token_index - 4)
-             tokens << make_token(:number, val[4], @token_index - 3)
-             tokens << DemoTape::Token::Space.new(val[5]) if val[5]
-             tokens << DemoTape::Token::Operator.new(",")
-             tokens << DemoTape::Token::Space.new(val[7]) if val[7]
-             tokens << make_token(:number, val[8], @token_index - 1)
-
-             cmd = DemoTape::Command.new(val[0], [val[4], val[8]], option: val[2])
-             cmd.tokens = tokens
-             result = attach_location(cmd).prepare!
-
+module_eval(<<'.,.,', 'demotape.y', 208)
+  def _reduce_35(val, _values, result)
+     idx = index_for_value(val[0]); result = { token: make_token(:space, val[0], idx), index: idx }
     result
   end
 .,.,
 
-module_eval(<<'.,.,', 'demotape.y', 362)
-  def _reduce_50(val, _values, result)
-                 @command_start_index = @token_index - 6
-
-             tokens = [
-               make_token(:identifier, val[0], @token_index - 6),
-               make_token(:space, val[1], @token_index - 5),
-               make_token(:identifier, val[2], @token_index - 4),
-               make_token(:space, val[3], @token_index - 3),
-               make_token(:duration, val[4], @token_index - 2)
-             ]
-
-             cmd = DemoTape::Command.new(val[0], val[4], option: val[2])
-             cmd.tokens = tokens
-             result = attach_location(cmd).prepare!
-
+module_eval(<<'.,.,', 'demotape.y', 209)
+  def _reduce_36(val, _values, result)
+     idx = index_for_value(val[0]); result = { token: make_token(:trailing_space, val[0], idx), index: idx }
     result
   end
 .,.,
 
-module_eval(<<'.,.,', 'demotape.y', 377)
-  def _reduce_51(val, _values, result)
-                 @command_start_index = @token_index - 5
-
-             tokens = [
-               make_token(:identifier, val[0], @token_index - 5),
-               make_token(:space, val[1], @token_index - 4),
-               make_token(:identifier, val[2], @token_index - 3),
-               make_token(:space, val[3], @token_index - 2),
-               make_token(:number, val[4], @token_index - 1)
-             ]
-
-             cmd = DemoTape::Command.new(val[0], val[4].to_s, option: val[2])
-             cmd.tokens = tokens
-             result = attach_location(cmd).prepare!
-
+module_eval(<<'.,.,', 'demotape.y', 210)
+  def _reduce_37(val, _values, result)
+     idx = index_for_value(val[0]); result = { token: make_token(:operator, ",", idx), index: idx }
     result
   end
 .,.,
 
-module_eval(<<'.,.,', 'demotape.y', 392)
-  def _reduce_52(val, _values, result)
-                 @command_start_index = @token_index - 5
-
-             tokens = [
-               make_token(:identifier, val[0], @token_index - 5),
-               make_token(:space, val[1], @token_index - 4),
-               make_token(:identifier, val[2], @token_index - 3),
-               make_token(:space, val[3], @token_index - 2),
-               make_token(:identifier, val[4], @token_index - 1)
-             ]
-
-             cmd = DemoTape::Command.new(val[0], val[4], option: val[2])
-             cmd.tokens = tokens
-             result = attach_location(cmd).prepare!
-
+module_eval(<<'.,.,', 'demotape.y', 211)
+  def _reduce_38(val, _values, result)
+     idx = index_for_value(val[0]); result = { token: make_token(:operator, "+", idx), index: idx }
     result
   end
 .,.,
 
-module_eval(<<'.,.,', 'demotape.y', 407)
-  def _reduce_53(val, _values, result)
-                 @command_start_index = @token_index - 5
-
-             tokens = [
-               make_token(:identifier, val[0], @token_index - 5),
-               make_token(:space, val[1], @token_index - 4),
-               make_token(:identifier, val[2], @token_index - 3),
-               make_token(:space, val[3], @token_index - 2),
-               make_token(:string, val[4], @token_index - 1)
-             ]
-
-             cmd = DemoTape::Command.new(val[0], val[4], option: val[2])
-             cmd.tokens = tokens
-             result = attach_location(cmd).prepare!
-
+module_eval(<<'.,.,', 'demotape.y', 212)
+  def _reduce_39(val, _values, result)
+     idx = index_for_value(val[0]); result = { token: make_token(:operator, "-", idx), index: idx }
     result
   end
 .,.,
 
-module_eval(<<'.,.,', 'demotape.y', 422)
-  def _reduce_54(val, _values, result)
-                 @command_start_index = @token_index - 3
-
-             tokens = [
-               make_token(:identifier, val[0], @token_index - 3),
-               make_token(:space, val[1], @token_index - 2),
-               make_token(:string, val[2], @token_index - 1)
-             ]
-
-             cmd = DemoTape::Command.new(val[0], val[2])
-             cmd.tokens = tokens
-             result = attach_location(cmd).prepare!
-
+module_eval(<<'.,.,', 'demotape.y', 213)
+  def _reduce_40(val, _values, result)
+     idx = index_for_value(val[0]); result = { token: make_token(:operator, "@", idx), index: idx }
     result
   end
 .,.,
 
-module_eval(<<'.,.,', 'demotape.y', 435)
-  def _reduce_55(val, _values, result)
-                 @command_start_index = @token_index - 4
-             duration_index = @token_index - 1  # TIME_UNIT position
-
-             tokens = [
-               make_token(:identifier, val[0], @token_index - 4),
-               make_token(:space, val[1], @token_index - 3),
-               make_token(:duration, val[2], @token_index - 2)
-             ]
-
-             cmd = DemoTape::Command.new(val[0], val[2])
-             cmd.tokens = tokens
-             result = attach_location(cmd, duration_index: duration_index).prepare!
-
-    result
-  end
-.,.,
-
-module_eval(<<'.,.,', 'demotape.y', 449)
-  def _reduce_56(val, _values, result)
-                 @command_start_index = @token_index - 1
-
-             tokens = [make_token(:identifier, val[0], @token_index - 1)]
-
-             # This could be a group invocation, mark it as such
-             cmd = DemoTape::Command.new(val[0], "", group_invocation: true)
-             cmd.tokens = tokens
-             result = attach_location(cmd).prepare!
-
-    result
-  end
-.,.,
-
-module_eval(<<'.,.,', 'demotape.y', 460)
-  def _reduce_57(val, _values, result)
-                   @last_key_index = @token_index - 1
-
-               tokens = [
-                 make_token(:identifier, val[0], @token_index - 3),
-                 make_token(:operator, "+", @token_index - 2),
-                 make_token(:identifier, val[2], @token_index - 1)
-               ]
-
-               result = { keys: [val[0], val[2]], tokens: tokens }
-
-    result
-  end
-.,.,
-
-module_eval(<<'.,.,', 'demotape.y', 471)
-  def _reduce_58(val, _values, result)
-                   @last_key_index = @token_index - 1
-
-               tokens = [
-                 make_token(:identifier, val[0], @token_index - 3),
-                 make_token(:operator, "+", @token_index - 2),
-                 make_token(:number, val[2], @token_index - 1)
-               ]
-
-               result = { keys: [val[0], val[2].to_s], tokens: tokens }
-
-    result
-  end
-.,.,
-
-module_eval(<<'.,.,', 'demotape.y', 482)
-  def _reduce_59(val, _values, result)
-                   @last_key_index = @token_index - 1
-
-               tokens = val[0][:tokens] + [
-                 make_token(:operator, "+", @token_index - 2),
-                 make_token(:identifier, val[2], @token_index - 1)
-               ]
-
-               result = { keys: val[0][:keys] << val[2], tokens: tokens }
-
-    result
-  end
-.,.,
-
-module_eval(<<'.,.,', 'demotape.y', 492)
-  def _reduce_60(val, _values, result)
-                   @last_key_index = @token_index - 1
-
-               tokens = val[0][:tokens] + [
-                 make_token(:operator, "+", @token_index - 2),
-                 make_token(:number, val[2], @token_index - 1)
-               ]
-
-               result = { keys: val[0][:keys] << val[2].to_s, tokens: tokens }
-
-    result
-  end
-.,.,
-
-module_eval(<<'.,.,', 'demotape.y', 502)
-  def _reduce_61(val, _values, result)
-     result = val[0]
-    result
-  end
-.,.,
-
-module_eval(<<'.,.,', 'demotape.y', 503)
-  def _reduce_62(val, _values, result)
-     result = val[0]
-    result
-  end
-.,.,
-
-module_eval(<<'.,.,', 'demotape.y', 505)
-  def _reduce_63(val, _values, result)
-     result = "#{val[0]}#{val[1]}"
+module_eval(<<'.,.,', 'demotape.y', 214)
+  def _reduce_41(val, _values, result)
+     idx = index_for_value(val[0]); result = { token: make_token(:time_unit, val[0], idx), index: idx }
     result
   end
 .,.,

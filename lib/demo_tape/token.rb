@@ -24,5 +24,7 @@ module DemoTape
     class LeadingSpace < Base; end
     class TrailingSpace < Base; end
     class Keyword < Base; end
+    class Comment < Base; end
+    class Newline < Base; end
   end
 end

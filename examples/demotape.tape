@@ -1,6 +1,6 @@
 Pause
 Send "cat demotape.ascii\n"
-WaitUntil /^$/
+WaitUntil /capture/
 Resume
 
 Sleep 5

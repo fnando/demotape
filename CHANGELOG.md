@@ -13,6 +13,7 @@ Prefix your message with one of the following:
 
 ## Unreleased
 
+- [Changed] Re-implemented parser.
 - [Added] Add `Group` command to group multiple commands together.
 - [Added] Add `Run` command to execute shell commands (combines Type, Sleep,
   Enter, Sleep).

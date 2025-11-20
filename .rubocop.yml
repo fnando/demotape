@@ -19,3 +19,6 @@ Style/IdenticalConditionalBranches:
 
 Layout/LineContinuationLeadingSpace:
   Enabled: false
+
+Minitest/EmptyLineBeforeAssertionMethods:
+  Enabled: false

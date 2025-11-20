@@ -61,9 +61,7 @@ class GroupTest < Minitest::Test
       end
     TAPE
 
-    expected = "Unexpected token \"DO\" at <unknown>:1:27:\n  " \
-               "Run \"echo 'Hello there!'\" do\n" \
-               "                            ^"
+    expected = %[Unexpected token "DO" at <unknown>:1:27:\n  Run "echo 'Hello there!'" do\n                            ^]
 
     error = assert_raises(DemoTape::ParseError) do
       DemoTape::Parser.new.parse(tape)
