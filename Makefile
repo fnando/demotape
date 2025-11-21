@@ -14,6 +14,8 @@ examples:
 	optipng -quiet -o2 examples/*.png
 
 theme-examples:
+	@rm -rf .sw*
+
 	@for file in $$(ls lib/demo_tape/themes/*.json); do \
 		name=$$(basename $${file%.*}); \
 		output_base_path="examples/themes/$${name}"; \
@@ -24,6 +26,6 @@ theme-examples:
 				--theme $${name} \
 				--output-path $${output_base_path}.mp4 \
 				--screenshot_only; \
+			optipng -quiet -o2 examples/themes/$${name}.png; \
 		fi; \
-	done; \
-	optipng -quiet -o2 examples/themes/*.png
+	done;
