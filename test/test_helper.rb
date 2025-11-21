@@ -18,5 +18,10 @@ module Minitest
     def parse(tape)
       DemoTape::Parser.new.parse(tape)
     end
+
+    def to_commands(tape)
+      parser = DemoTape::Parser.new
+      parser.to_commands(parser.parse(tape))
+    end
   end
 end

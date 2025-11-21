@@ -2,10 +2,6 @@
 
 module DemoTape
   class Lexer
-    def self.tokenize(content)
-      new.tokenize(content)
-    end
-
     attr_reader :line_map
 
     def tokenize(content)
@@ -39,7 +35,7 @@ module DemoTape
               content: '"""',
               raw: '"""..."""'
             }
-            tokens << [:STRING, multiline_text]
+            tokens << [:MULTILINE_STRING, multiline_text]
             token_index += 1
 
             # Add NEWLINE token after multiline string
@@ -73,7 +69,7 @@ module DemoTape
             tokens << [:LEADING_SPACE, leading_space]
             token_index += 1
           end
-          
+
           # Emit COMMENT token
           @line_map[token_index] = {
             line: @line_number,
@@ -114,8 +110,9 @@ module DemoTape
           line_tokens[0][0] = :LEADING_SPACE
         end
 
-        # Special case: if the line is just whitespace followed by 'end', skip the LEADING_SPACE
-        # This helps the parser avoid shift/reduce conflicts with group_body rules
+        # Special case: if the line is just whitespace followed by 'end', skip
+        # the LEADING_SPACE. This helps the parser avoid shift/reduce conflicts
+        # with group_body rules
         if line_tokens.length >= 2 &&
            line_tokens[0][0] == :LEADING_SPACE &&
            line_tokens[1][0] == :END &&
@@ -230,17 +227,27 @@ module DemoTape
 
         # Regex pattern (between forward slashes)
         elsif scanner.scan(%r{/((?:[^/\\]|\\.)*)/})
-          tokens << [:REGEX, scanner[1], col, scanner[0]]
+          result = begin
+            {pattern: Regexp.new(scanner[1])}
+          rescue RegexpError => error
+            {error: error.message.gsub("/#{scanner[1]}/", "").strip.chomp(":")}
+          end
+
+          tokens << [:REGEX, result, col, scanner[0]]
 
         # Duration (number + time unit - any identifier)
-        elsif scanner.scan(/(\d+(?:\.\d+)?|\.\d+)([a-zA-Z]+)/)
+        elsif scanner.scan(/(\d+(?:\.\d+)?|-?\.\d+)([a-zA-Z]+)/)
           number_part = scanner[1]
           unit_part = scanner[2]
           full_match = scanner[0]
           tokens << [
             :DURATION,
             {
-              number: number_part.include?(".") ? number_part.to_f : number_part.to_i,
+              number: if number_part.include?(".")
+                        number_part.to_f
+                      else
+                        number_part.to_i
+                      end,
               unit: unit_part,
               raw: full_match
             },
@@ -248,8 +255,8 @@ module DemoTape
             full_match
           ]
 
-        # Number
-        elsif scanner.scan(/\d+(?:\.\d+)?|\.\d+/)
+        # Number (including negative numbers)
+        elsif scanner.scan(/-?(?:\d+(?:\.\d+)?|\.\d+)/)
           value = scanner[0].include?(".") ? scanner[0].to_f : scanner[0].to_i
           tokens << [:NUMBER, value, col, scanner[0]]
 
@@ -260,10 +267,6 @@ module DemoTape
         # Plus symbol
         elsif scanner.scan("+")
           tokens << [:PLUS, "+", col, "+"]
-
-        # Minus symbol
-        elsif scanner.scan("-")
-          tokens << [:MINUS, "-", col, "-"]
 
         # Comma
         elsif scanner.scan(",")
@@ -279,13 +282,6 @@ module DemoTape
                        else :IDENTIFIER
                        end
           tokens << [token_type, value, col, value]
-
-        # Word
-        elsif scanner.scan(/\S+/)
-          tokens << [:WORD, scanner[0], col, scanner[0]]
-
-        else
-          break
         end
       end
 

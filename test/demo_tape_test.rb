@@ -5,19 +5,19 @@ require "test_helper"
 class DemoTapeTest < Minitest::Test
   test "supports escaping quotes in strings" do
     assert_equal %[say "hello"],
-                 parse(%[Type "say \\"hello\\""]).first.args
+                 to_commands(%[Type "say \\"hello\\""]).first.args
 
     assert_equal "say 'hello'",
-                 parse("Type 'say \\'hello\\''").first.args
+                 to_commands("Type 'say \\'hello\\''").first.args
   end
 
   test "fails to parse unknown command" do
     error = assert_raises(DemoTape::ParseError) do
-      parse("Reboot")
+      to_commands("Reboot")
     end
 
     expected = [
-      %[Unknown command: "Reboot" at <unknown>:1:1:],
+      %[Unexpected token "Reboot" at <unknown>:1:1:],
       "  Reboot",
       "  ^"
     ].join("\n")
@@ -27,13 +27,13 @@ class DemoTapeTest < Minitest::Test
 
   test "fails if commands receive duration when they don't expect it" do
     error = assert_raises(DemoTape::ParseError) do
-      parse("Send@10ms")
+      to_commands("Set@10ms margin 10")
     end
 
     expected = [
-      %[Command "Send" does not accept a duration option at <unknown>:1:5:],
-      "  Send@10ms",
-      "      ^"
+      %[Unexpected token "@" at <unknown>:1:4:],
+      "  Set@10ms margin 10",
+      "     ^"
     ].join("\n")
 
     assert_equal expected, error.message
@@ -41,13 +41,27 @@ class DemoTapeTest < Minitest::Test
 
   test "fails if command has invalid duration unit" do
     error = assert_raises(DemoTape::ParseError) do
-      parse("Type@10ns 'hello'")
+      to_commands("Type@10ns 'hello'")
     end
 
     expected = [
-      %[Invalid time unit: "ns" at <unknown>:1:8:],
+      %[Invalid unit "ns" in duration at <unknown>:1:6:],
       "  Type@10ns 'hello'",
-      "         ^"
+      "       ^"
+    ].join("\n")
+
+    assert_equal expected, error.message
+  end
+
+  test "fails if Sleep has invalid duration unit" do
+    error = assert_raises(DemoTape::ParseError) do
+      to_commands("Sleep 10ns")
+    end
+
+    expected = [
+      %[Invalid unit "ns" in duration at <unknown>:1:7:],
+      "  Sleep 10ns",
+      "        ^"
     ].join("\n")
 
     assert_equal expected, error.message
@@ -55,13 +69,13 @@ class DemoTapeTest < Minitest::Test
 
   test "fails with key combo on a command that doesn't support one" do
     error = assert_raises(DemoTape::ParseError) do
-      parse("Wait+Alt")
+      to_commands("Wait+Alt")
     end
 
     expected = [
-      %[Command "Wait" doesn't support key combos at <unknown>:1:6:],
+      %[Unexpected token "+" at <unknown>:1:5:],
       "  Wait+Alt",
-      "       ^"
+      "      ^"
     ].join("\n")
 
     assert_equal expected, error.message
@@ -69,11 +83,11 @@ class DemoTapeTest < Minitest::Test
 
   test "fails with key combo that also lists a command" do
     error = assert_raises(DemoTape::ParseError) do
-      parse("Ctrl+Alt+Wait")
+      to_commands("Ctrl+Alt+Wait")
     end
 
     expected = [
-      %[Command "Wait" doesn't support key combos at <unknown>:1:10:],
+      %[Unexpected token "Wait" at <unknown>:1:10:],
       "  Ctrl+Alt+Wait",
       "           ^"
     ].join("\n")
@@ -83,13 +97,13 @@ class DemoTapeTest < Minitest::Test
 
   test "fails with key combo with spaces" do
     error = assert_raises(DemoTape::ParseError) do
-      parse("Ctrl + Shift + D")
+      to_commands("Ctrl + Shift + D")
     end
 
     expected = [
-      %[Unexpected token "SPACE" at <unknown>:1:5:],
+      %[Invalid spacing around '+' in key combo at <unknown>:1:6:],
       "  Ctrl + Shift + D",
-      "      ^"
+      "       ^"
     ].join("\n")
 
     assert_equal expected, error.message
@@ -97,33 +111,47 @@ class DemoTapeTest < Minitest::Test
 
   test "accepts valid key combos" do
     assert_equal %w[L Alt Delete],
-                 parse("Ctrl+L+Alt+Delete")[0].options[:keys]
+                 to_commands("Ctrl+L+Alt+Delete")[0].options[:keys]
   end
 
   test "accepts single keys with press count" do
-    assert_equal 3, parse("Backspace 3")[0].options[:count]
+    assert_equal 3, to_commands("Backspace 3")[0].options[:count]
   end
 
   test "accepts key combo with press count" do
-    assert_equal 3, parse("Ctrl+Left 3")[0].options[:count]
+    assert_equal 3, to_commands("Ctrl+Left 3")[0].options[:count]
   end
 
   test "fails if commands receive count when they don't expect it" do
     error = assert_raises(DemoTape::ParseError) do
-      parse("Type 'hello' 2")
+      to_commands("Type 'hello'    2")
     end
 
     expected = [
-      %[Unexpected token "NUMBER" at <unknown>:1:14:],
-      "  Type 'hello' 2",
-      "               ^"
+      %[Unexpected token "2" at <unknown>:1:17:],
+      "  Type 'hello'    2",
+      "                  ^"
+    ].join("\n")
+
+    assert_equal expected, error.message
+  end
+
+  test "fails if commands receive any trailing token" do
+    error = assert_raises(DemoTape::ParseError) do
+      to_commands("Type 'hello'  a  @123ms")
+    end
+
+    expected = [
+      %[Unexpected token "a" at <unknown>:1:15:],
+      "  Type 'hello'  a  @123ms",
+      "                ^"
     ].join("\n")
 
     assert_equal expected, error.message
   end
 
   test "parses command with comments" do
-    commands = parse(<<~TAPE)
+    commands = to_commands(<<~TAPE)
       # This is a comment
       Type 'hello'
       # One more comment
@@ -138,11 +166,11 @@ class DemoTapeTest < Minitest::Test
 
   test "fails with invalid nested properties that are not recognized" do
     error = assert_raises(DemoTape::ParseError) do
-      parse(%[Set foo.invalid "#222222"])
+      to_commands(%[Set foo.invalid "#222222"])
     end
 
     expected = [
-      %[Unexpected attribute "foo.invalid" at <unknown>:1:5:],
+      %[Unexpected token "foo.invalid" at <unknown>:1:5:],
       %[  Set foo.invalid "#222222"],
       %[      ^]
     ].join("\n")

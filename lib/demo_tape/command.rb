@@ -90,7 +90,8 @@ module DemoTape
 
     META_COMMANDS = %w[Group Include Output Require Set].freeze
     COMMANDS_WITH_DURATION = KEY_MAPPING.keys +
-                             %w[Run Type TypeFile WaitUntil].freeze
+                             %w[Run Type TypeFile WaitUntil Wait Sleep].freeze
+    COMMANDS_WITH_COUNT = KEY_MAPPING.keys + %w[Wait Sleep Set]
     VALID_TIME_UNITS = %w[ms s m h].freeze
 
     # Valid keys that can be used in key combos
@@ -160,17 +161,14 @@ module DemoTape
                       .to_sym
     end
 
+    def find_token(klass, list = tokens)
+      list.find {|token| token.is_a?(klass) }
+    end
+
     def group_invocation?
       # Group invocations are marked as such
       # AND don't start with uppercase letter
       @group_invocation && type[0].to_s.match?(/[^A-Z]/)
-    end
-
-    def validate_command!
-      return if group_invocation?
-      return if VALID_COMMANDS.include?(type)
-
-      raise_error "Unknown command: #{type.inspect}"
     end
 
     def validate_set_options!
@@ -185,76 +183,9 @@ module DemoTape
                   column_override: tokens[2].column
     end
 
-    def validate_keys!
-      return unless options[:keys]
-
-      all_keys = options[:keys] + [type]
-
-      all_keys.each do |key|
-        next if VALID_KEYS.include?(key)
-
-        unless VALID_COMMANDS.include?(key)
-          raise_error "Invalid key in combo: #{key.inspect}"
-        end
-
-        raise_error "Command #{key.inspect} doesn't support key combos"
-      end
-    end
-
-    def validate_regex!
-      return unless type == "WaitUntil"
-
-      raise_error "WaitUntil command requires a regex pattern" if args.empty?
-
-      begin
-        options[:pattern] = Regexp.new(args)
-      rescue RegexpError => error
-        raise_error "Invalid regex pattern: #{error.message}"
-      end
-    end
-
-    private def validate_children!
-      return unless group?
-
-      children.each do |child|
-        next unless child.group?
-
-        child.raise_error "Nested groups are not allowed"
-      end
-    end
-
-    private def validate_type_file!
-      return unless type == "TypeFile"
-
-      raise_error "TypeFile command requires a file path" if args.empty?
-    end
-
-    private def validate_duration!
-      if !COMMANDS_WITH_DURATION.include?(type) && options[:duration]
-        raise_error "Command #{type.inspect} does not accept a duration option"
-      end
-
-      duration = options[:duration]
-
-      return unless duration
-
-      unit = duration[/[a-z]+$/i]
-      return if VALID_TIME_UNITS.include?(unit)
-
-      raise_error "Invalid time unit: #{unit.inspect}",
-                  column_override: duration_column
-    end
-
     def prepare!
-      validate_command!
-      validate_children!
       normalize_theme_options!
       validate_set_options!
-      validate_keys!
-      validate_regex!
-      validate_duration!
-      validate_type_file!
-
       normalize_spacing_values!
 
       self
@@ -264,20 +195,20 @@ module DemoTape
       return unless type == "Set"
       return unless options[:option]&.include?(".")
 
-      option, sub_option = *options[:option].split(".", 2)
+      option, property = *options[:option].split(".", 2)
 
       unless option == "theme"
         raise_error "Unexpected attribute #{options[:option].inspect}",
                     column_override: tokens[2].column
       end
 
-      unless Theme.valid_options.include?(sub_option.to_sym)
+      unless Theme.valid_options.include?(property.to_sym)
         raise_error "Invalid theme property",
                     column_override: tokens[2].column + option.length + 1
       end
 
       @options[:option] = option
-      @options[:sub_option] = sub_option
+      @options[:property] = property
     end
 
     private def normalize_spacing_values!
@@ -294,8 +225,14 @@ module DemoTape
 
     def raise_error(message, column_override: nil)
       col = column_override || column
+      line_content = tokens
+                     # Remove "end" keyword from line content
+                     # This is required so we can properly point to errors
+                     # in commands that have blocks (e.g. Run do..end)
+                     .reject { it.is_a?(Token::Keyword) && it.value == "end" }
+                     .map(&:raw).join
 
-      raise DemoTape::ParseError, message unless line && col && line_content
+      raise DemoTape::ParseError, message unless line && col
 
       error_msg = "#{message} at #{location(column_override:)}:\n"
       error_msg += "  #{line_content.strip}\n"
@@ -324,7 +261,7 @@ module DemoTape
         preceded_by_number = previous_token.is_a?(Token::Number)
         preceded_by_group_name = tokens[index - 2]&.value == "Group"
         preceded_by_command_with_duration =
-          %w[Sleep Wait].include?(tokens[index - 2]&.value)
+          %w[Sleep Wait].include?(tokens[index - 2]&.value) # rubocop:disable Performance/CollectionLiteralInLoop
 
         case token
         when Token::Duration

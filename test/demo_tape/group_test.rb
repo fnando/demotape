@@ -14,7 +14,7 @@ class GroupTest < Minitest::Test
       setup
     TAPE
 
-    DemoTape::Parser.new.parse(tape) => [command, *]
+    to_commands(tape) => [command, *]
     command.children => [run_cmd, type_cmd, enter_cmd]
 
     assert command.meta?
@@ -47,9 +47,9 @@ class GroupTest < Minitest::Test
       DemoTape::Parser.new.parse(tape)
     end
 
-    expected = "Nested groups are not allowed at <unknown>:2:3:\n" \
+    expected = "Unexpected token \"DO\" at <unknown>:2:17:\n" \
                "  Group another do\n" \
-               "  ^"
+               "                ^"
 
     assert_equal(expected, error.message)
   end
@@ -61,10 +61,14 @@ class GroupTest < Minitest::Test
       end
     TAPE
 
-    expected = %[Unexpected token "DO" at <unknown>:1:27:\n  Run "echo 'Hello there!'" do\n                            ^]
+    expected = [
+      %[Command "Run" doesn't support blocks at <unknown>:1:27:],
+      %[  Run "echo 'Hello there!'" do],
+      %[                            ^]
+    ].join("\n")
 
     error = assert_raises(DemoTape::ParseError) do
-      DemoTape::Parser.new.parse(tape)
+      to_commands(tape)
     end
 
     assert_equal expected, error.message

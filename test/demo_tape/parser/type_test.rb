@@ -122,7 +122,9 @@ class ParserTypeTest < Minitest::Test
       duration_token = command[:tokens].find {|t| t.is_a?(DemoTape::Token::Duration) }
       assert_equal expected_number, duration_token.value[:number],
                    "Failed number for: #{source}"
-      assert_equal expected_unit, duration_token.value[:unit], "Failed unit for: #{source}"
+      assert_equal expected_unit,
+                   duration_token.value[:unit],
+                   "Failed unit for: #{source}"
     end
   end
 
@@ -185,7 +187,7 @@ class ParserTypeTest < Minitest::Test
     assert_instance_of DemoTape::Token::Space, space_token
 
     string_token = command[:tokens][2]
-    assert_instance_of DemoTape::Token::String, string_token
+    assert_instance_of DemoTape::Token::MultilineString, string_token
     assert_equal "line 1\nline 2", string_token.value
     assert_equal 1, string_token.line
     assert_equal 6, string_token.column

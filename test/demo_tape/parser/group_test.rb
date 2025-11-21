@@ -20,7 +20,7 @@ class ParserGroupTest < Minitest::Test
 
     group = result[0]
     assert_equal :group, group[:type]
-    assert_equal 5, group[:tokens].size
+    assert_equal 6, group[:tokens].size
 
     assert_instance_of DemoTape::Token::Identifier, group[:tokens][0]
     assert_equal "Group", group[:tokens][0].value
@@ -36,6 +36,9 @@ class ParserGroupTest < Minitest::Test
 
     assert_instance_of DemoTape::Token::Keyword, group[:tokens][4]
     assert_equal "do", group[:tokens][4].value
+
+    assert_instance_of DemoTape::Token::Keyword, group[:tokens][5]
+    assert_equal "end", group[:tokens][5].value
 
     # Group should have children
     assert_instance_of Array, group[:children]
@@ -371,7 +374,7 @@ class ParserGroupTest < Minitest::Test
     assert_equal "Sleep", commands[1][:tokens][1].value
   end
 
-  test "error reporting includes correct line and column for Group" do
+  test "includes correct line and column for Group on error reporting" do
     source = <<~TAPE
       # Comment
       Group test do
@@ -386,5 +389,25 @@ class ParserGroupTest < Minitest::Test
 
     assert_equal 2, group[:line]
     assert_equal 1, group[:column]
+  end
+
+  test "validates inner commands" do
+    source = <<~TAPE
+      Group invalid do
+        Type "test" 2
+      end
+    TAPE
+
+    error = assert_raises(DemoTape::ParseError) do
+      parse(source)
+    end
+
+    expected = [
+      %[Unexpected token "2" at <unknown>:2:15:],
+      "    Type \"test\" 2",
+      "                  ^"
+    ].join("\n")
+
+    assert_equal expected, error.message
   end
 end

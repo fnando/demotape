@@ -432,7 +432,7 @@ module DemoTape
         end
 
         run_wait_until(
-          Command.new("WaitUntil", "^::demotape:ready::$")
+          Command.new("WaitUntil", {pattern: /^::demotape:ready::$/})
         )
         run_clear(nil)
         sleep 1
@@ -539,7 +539,7 @@ module DemoTape
       ])
 
       timeout = Duration.parse(command.options.fetch(:duration, 15))
-      pattern = Regexp.new(command.args)
+      pattern = command.args.fetch(:pattern)
       tick = 0.02
 
       curr_line = read_state(:term_current_line)

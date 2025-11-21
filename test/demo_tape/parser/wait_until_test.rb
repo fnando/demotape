@@ -22,7 +22,7 @@ class ParserWaitUntilTest < Minitest::Test
     assert_instance_of DemoTape::Token::Space, command[:tokens][1]
 
     assert_instance_of DemoTape::Token::Regex, command[:tokens][2]
-    assert_equal "line 10", command[:tokens][2].value
+    assert_equal({pattern: /line 10/}, command[:tokens][2].value)
 
     assert_instance_of DemoTape::Token::Newline, result[1]
   end
@@ -45,43 +45,44 @@ class ParserWaitUntilTest < Minitest::Test
     assert_instance_of DemoTape::Token::Space, command[:tokens][3]
 
     assert_instance_of DemoTape::Token::Regex, command[:tokens][4]
-    assert_equal "Done!", command[:tokens][4].value
+    assert_equal({pattern: /Done!/}, command[:tokens][4].value)
   end
 
   test "parses WaitUntil with anchored regex" do
     result = parse("WaitUntil /^Ready$/\n")
 
     command = result[0]
-    assert_equal "^Ready$", command[:tokens][2].value
+    assert_equal({pattern: /^Ready$/}, command[:tokens][2].value)
   end
 
   test "parses WaitUntil with complex regex" do
     result = parse("WaitUntil /error.*occurred/\n")
 
     command = result[0]
-    assert_equal "error.*occurred", command[:tokens][2].value
+    assert_equal({pattern: /error.*occurred/}, command[:tokens][2].value)
   end
 
   test "parses WaitUntil with character class regex" do
     result = parse("WaitUntil /[0-9]+%/\n")
 
     command = result[0]
-    assert_equal "[0-9]+%", command[:tokens][2].value
+    assert_equal({pattern: /[0-9]+%/}, command[:tokens][2].value)
   end
 
   test "parses WaitUntil with escaped characters in regex" do
-    result = parse("WaitUntil /\\d+ items/\n")
+    result = parse('WaitUntil /\\\d+ items/')
 
     command = result[0]
-    assert_equal "\\d+ items", command[:tokens][2].value
+    assert_equal({pattern: /\\d+ items/}, command[:tokens][2].value)
   end
 
   test "parses WaitUntil with duration in milliseconds" do
     result = parse("WaitUntil@500ms /ready/\n")
 
     command = result[0]
-    assert_equal({number: 500, unit: "ms", raw: "500ms"}, command[:tokens][2].value)
-    assert_equal "ready", command[:tokens][4].value
+    assert_equal({number: 500, unit: "ms", raw: "500ms"},
+                 command[:tokens][2].value)
+    assert_equal({pattern: /ready/}, command[:tokens][4].value)
   end
 
   test "parses WaitUntil with duration in minutes" do
@@ -102,7 +103,7 @@ class ParserWaitUntilTest < Minitest::Test
     assert_equal "  ", command[:tokens][0].value
 
     assert_equal "WaitUntil", command[:tokens][1].value
-    assert_equal "test", command[:tokens][3].value
+    assert_equal({pattern: /test/}, command[:tokens][3].value)
   end
 
   test "parses multiple WaitUntil commands" do
@@ -118,10 +119,11 @@ class ParserWaitUntilTest < Minitest::Test
                .select {|item| item.is_a?(Hash) && item[:type] == :command }
     assert_equal 3, commands.length
 
-    assert_equal "first", commands[0][:tokens][2].value
-    assert_equal({number: 10, unit: "s", raw: "10s"}, commands[1][:tokens][2].value)
-    assert_equal "second", commands[1][:tokens][4].value
-    assert_equal "third", commands[2][:tokens][2].value
+    assert_equal({pattern: /first/}, commands[0][:tokens][2].value)
+    assert_equal({number: 10, unit: "s", raw: "10s"},
+                 commands[1][:tokens][2].value)
+    assert_equal({pattern: /second/}, commands[1][:tokens][4].value)
+    assert_equal({pattern: /third/}, commands[2][:tokens][2].value)
   end
 
   test "preserves line and column info" do
@@ -182,56 +184,49 @@ class ParserWaitUntilTest < Minitest::Test
     # Second command is WaitUntil
     wait_cmd = commands[1]
     assert_equal "WaitUntil", wait_cmd[:tokens][1].value
-    assert_equal "Build complete", wait_cmd[:tokens][3].value
+    assert_equal({pattern: /Build complete/}, wait_cmd[:tokens][3].value)
   end
 
   test "parses WaitUntil with whitespace in regex" do
     result = parse("WaitUntil /status: complete/\n")
 
     command = result[0]
-    assert_equal "status: complete", command[:tokens][2].value
-  end
-
-  test "parses WaitUntil with special regex metacharacters" do
-    result = parse("WaitUntil /^\\[.*\\]$/\n")
-
-    command = result[0]
-    assert_equal "^\\[.*\\]$", command[:tokens][2].value
+    assert_equal({pattern: /status: complete/}, command[:tokens][2].value)
   end
 
   test "parses WaitUntil with empty regex pattern" do
     result = parse("WaitUntil //\n")
 
     command = result[0]
-    assert_equal "", command[:tokens][2].value
+    assert_equal({pattern: //}, command[:tokens][2].value)
   end
 
   test "parses WaitUntil with word boundaries" do
-    result = parse("WaitUntil /\\bword\\b/\n")
+    result = parse('WaitUntil /\bword\b/')
 
     command = result[0]
-    assert_equal "\\bword\\b", command[:tokens][2].value
+    assert_equal({pattern: /\bword\b/}, command[:tokens][2].value)
   end
 
   test "parses WaitUntil with alternation" do
     result = parse("WaitUntil /ready|complete|done/\n")
 
     command = result[0]
-    assert_equal "ready|complete|done", command[:tokens][2].value
+    assert_equal({pattern: /ready|complete|done/}, command[:tokens][2].value)
   end
 
   test "parses WaitUntil with quantifiers" do
     result = parse("WaitUntil /test{2,5}/\n")
 
     command = result[0]
-    assert_equal "test{2,5}", command[:tokens][2].value
+    assert_equal({pattern: /test{2,5}/}, command[:tokens][2].value)
   end
 
   test "parses WaitUntil with lookahead" do
     result = parse("WaitUntil /foo(?=bar)/\n")
 
     command = result[0]
-    assert_equal "foo(?=bar)", command[:tokens][2].value
+    assert_equal({pattern: /foo(?=bar)/}, command[:tokens][2].value)
   end
 
   test "parses WaitUntil with trailing space before newline" do
@@ -241,5 +236,18 @@ class ParserWaitUntilTest < Minitest::Test
     # Should have: WaitUntil, space, regex, trailing_space
     assert_equal 4, command[:tokens].length
     assert_instance_of DemoTape::Token::TrailingSpace, command[:tokens][3]
+  end
+
+  test "fails with invalid regex" do
+    error = assert_raises(DemoTape::ParseError) do
+      parse("WaitUntil /[derp/\n")
+    end
+
+    expected = "Invalid regular expression (premature end of char-class) at " \
+               "<unknown>:1:11:\n" \
+               "  WaitUntil /[derp/\n" \
+               "            ^"
+
+    assert_equal expected, error.message
   end
 end

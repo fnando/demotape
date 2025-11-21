@@ -82,7 +82,8 @@ class ParserSetTest < Minitest::Test
 
     assert_equal "run_enter_delay", command[:tokens][2].value
     assert_instance_of DemoTape::Token::Duration, command[:tokens][4]
-    assert_equal({number: 300, unit: "ms", raw: "300ms"}, command[:tokens][4].value)
+    assert_equal({number: 300, unit: "ms", raw: "300ms"},
+                 command[:tokens][4].value)
   end
 
   test "parses Set padding with 1 value" do
@@ -442,21 +443,11 @@ class ParserSetTest < Minitest::Test
     assert_equal "font_family", command[:tokens][2].value
   end
 
-  test "parses Set with complex dotted property" do
-    result = parse("Set theme.colors.background \"#000\"\n")
-
-    command = result[0]
-    # The lexer may treat this as a single identifier or multiple parts
-    # Just verify it's captured
-    property_token = command[:tokens][2]
-    assert_instance_of DemoTape::Token::Identifier, property_token
-  end
-
   test "parses Set with float value" do
-    result = parse("Set opacity 0.75\n")
+    result = parse("Set line_height 0.75\n")
 
     command = result[0]
-    assert_equal "opacity", command[:tokens][2].value
+    assert_equal "line_height", command[:tokens][2].value
     assert_in_delta(0.75, command[:tokens][4].value)
   end
 
@@ -469,28 +460,27 @@ class ParserSetTest < Minitest::Test
   end
 
   test "parses Set with negative value" do
-    result = parse("Set offset -10\n")
+    result = parse("Set margin -10\n")
 
     command = result[0]
-    assert_equal "offset", command[:tokens][2].value
-    # Negative might be parsed as operator + number
-    # Just verify we can parse it
-    assert_operator command[:tokens].size, :>=, 5
+    assert_equal 5, command[:tokens].size
+    assert_equal "margin", command[:tokens][2].value
+    assert_equal(-10, command[:tokens][4].value)
   end
 
   test "parses Set with time in seconds" do
-    result = parse("Set delay 5s\n")
+    result = parse("Set loop_delay 5s\n")
 
     command = result[0]
-    assert_equal "delay", command[:tokens][2].value
+    assert_equal "loop_delay", command[:tokens][2].value
     assert_equal({number: 5, unit: "s", raw: "5s"}, command[:tokens][4].value)
   end
 
   test "parses Set with time in minutes" do
-    result = parse("Set timeout 2m\n")
+    result = parse("Set loop_delay 2m\n")
 
     command = result[0]
-    assert_equal "timeout", command[:tokens][2].value
+    assert_equal "loop_delay", command[:tokens][2].value
     assert_equal({number: 2, unit: "m", raw: "2m"}, command[:tokens][4].value)
   end
 
@@ -524,5 +514,17 @@ class ParserSetTest < Minitest::Test
     command = result[0]
     assert_equal "loop_delay", command[:tokens][2].value
     assert_equal({number: 2, unit: "s", raw: "2s"}, command[:tokens][4].value)
+  end
+
+  test "fails when Set loop_delay has invalid duration unit" do
+    error = assert_raises(DemoTape::ParseError) do
+      parse("Set loop_delay 2ns\n")
+    end
+
+    expected = "Invalid unit \"ns\" in duration at <unknown>:1:16:\n" \
+               "  Set loop_delay 2ns\n" \
+               "                 ^"
+
+    assert_equal expected, error.message
   end
 end

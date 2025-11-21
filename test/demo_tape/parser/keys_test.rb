@@ -169,18 +169,16 @@ class ParserKeysTest < Minitest::Test
     assert_equal 6, last_token.column
   end
 
-  test "parses key combo with spaces around plus" do
-    result = parse("Ctrl + C\n")
+  test "fails when key combo has spaces around plus sign" do
+    error = assert_raises(DemoTape::ParseError) do
+      parse("Ctrl + C\n")
+    end
 
-    command = result[0]
-    assert_equal :command, command[:type]
-    assert_equal 5, command[:tokens].size
+    expected = "Invalid spacing around '+' in key combo at <unknown>:1:6:\n" \
+               "  Ctrl + C\n" \
+               "       ^"
 
-    assert_equal "Ctrl", command[:tokens][0].value
-    assert_instance_of DemoTape::Token::Space, command[:tokens][1]
-    assert_equal "+", command[:tokens][2].value
-    assert_instance_of DemoTape::Token::Space, command[:tokens][3]
-    assert_equal "C", command[:tokens][4].value
+    assert_equal expected, error.message
   end
 
   test "parses Home and End keys" do

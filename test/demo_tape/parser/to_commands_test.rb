@@ -32,14 +32,14 @@ class ParserToCommandsTest < Minitest::Test
   end
 
   test "converts Set command with single value" do
-    commands = parse_and_convert(%[Set theme.bg "#ffffff"\n])
+    commands = parse_and_convert(%[Set theme.background "#ffffff"\n])
 
     assert_equal 1, commands.size
     cmd = commands[0]
 
     assert_equal "Set", cmd.type
     assert_equal "#ffffff", cmd.args
-    assert_equal({option: "theme.bg"}, cmd.options)
+    assert_equal({option: "theme", property: "background"}, cmd.options)
   end
 
   test "converts key command with count" do
@@ -233,8 +233,7 @@ class ParserToCommandsTest < Minitest::Test
     cmd = commands[0]
 
     assert_equal "WaitUntil", cmd.type
-    assert_equal "true", cmd.args
-    assert_empty(cmd.options)
+    assert_equal({pattern: /true/}, cmd.args)
   end
 
   test "converts WaitUntil with duration and regex" do
@@ -244,7 +243,7 @@ class ParserToCommandsTest < Minitest::Test
     cmd = commands[0]
 
     assert_equal "WaitUntil", cmd.type
-    assert_equal "Done!", cmd.args
+    assert_equal({pattern: /Done!/}, cmd.args)
     assert_equal({duration: 30.0}, cmd.options)
   end
 
@@ -278,6 +277,46 @@ class ParserToCommandsTest < Minitest::Test
 
     assert_equal "Set", cmd.type
     assert_equal "#ff0000", cmd.args
-    assert_equal({option: "theme.foreground"}, cmd.options)
+    assert_equal({option: "theme", property: "foreground"}, cmd.options)
+  end
+
+  test "converts seconds as duration" do
+    commands = parse_and_convert(%[Sleep 1s\n])
+
+    assert_equal 1, commands.size
+    cmd = commands[0]
+
+    assert_equal "Sleep", cmd.type
+    assert_equal({duration: 1.0}, cmd.options)
+  end
+
+  test "converts minutes as duration" do
+    commands = parse_and_convert(%[Sleep 2m\n])
+
+    assert_equal 1, commands.size
+    cmd = commands[0]
+
+    assert_equal "Sleep", cmd.type
+    assert_equal({duration: 120.0}, cmd.options)
+  end
+
+  test "converts milliseconds as duration" do
+    commands = parse_and_convert(%[Sleep 100ms\n])
+
+    assert_equal 1, commands.size
+    cmd = commands[0]
+
+    assert_equal "Sleep", cmd.type
+    assert_equal({duration: 0.1}, cmd.options)
+  end
+
+  test "converts hours as duration" do
+    commands = parse_and_convert(%[Sleep 1.5h\n])
+
+    assert_equal 1, commands.size
+    cmd = commands[0]
+
+    assert_equal "Sleep", cmd.type
+    assert_equal({duration: 5400}, cmd.options)
   end
 end

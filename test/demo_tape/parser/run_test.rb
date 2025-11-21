@@ -37,7 +37,10 @@ class ParserRunTest < Minitest::Test
     assert_equal "@", command[:tokens][1].value
 
     assert_instance_of DemoTape::Token::Duration, command[:tokens][2]
-    assert_equal({number: 100, unit: "ms", raw: "100ms"}, command[:tokens][2].value)
+    assert_equal(
+      {number: 100, unit: "ms", raw: "100ms"},
+      command[:tokens][2].value
+    )
 
     assert_instance_of DemoTape::Token::Space, command[:tokens][3]
 
@@ -55,7 +58,12 @@ class ParserRunTest < Minitest::Test
       command = result[0]
 
       assert_instance_of DemoTape::Token::Duration, command[:tokens][2]
-      assert_equal({number: expected_num, unit: expected_unit, raw: expected_raw}, command[:tokens][2].value)
+      assert_equal(
+        {
+          number: expected_num, unit: expected_unit,
+          raw: expected_raw
+        }, command[:tokens][2].value
+      )
     end
   end
 end

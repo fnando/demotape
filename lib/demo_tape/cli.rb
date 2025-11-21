@@ -180,6 +180,34 @@ module DemoTape
       )
     end
 
+    desc "format", "Formats a demo tape script"
+    option :write,
+           type: :boolean,
+           default: false,
+           desc: "Overwrite the original files with the formatted content"
+    def format(*paths)
+      paths = paths.flat_map {|path| Dir.glob(path) }
+
+      if paths.size > 1 && !options.write
+        shell.say(
+          "Error: --write must be specified when formatting multiple files.",
+          :red
+        )
+
+        exit 1
+      end
+
+      paths.each do |path|
+        formatted = Formatter.new(File.read(path)).call
+
+        if options.write
+          File.write(path, formatted)
+        else
+          puts formatted
+        end
+      end
+    end
+
     no_commands do
       # Add helper methods here
     end

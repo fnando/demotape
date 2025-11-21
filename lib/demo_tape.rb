@@ -13,12 +13,13 @@ module DemoTape
   require "tty-spinner"
 
   require_relative "demo_tape/version"
+  require_relative "demo_tape/command"
   require_relative "demo_tape/spacing"
   require_relative "demo_tape/bounds"
   require_relative "demo_tape/token"
+  require_relative "demo_tape/parser/helpers"
+  require_relative "demo_tape/parser/rules"
   require_relative "demo_tape/parser"
-  require_relative "demo_tape/ast"
-  require_relative "demo_tape/command"
   require_relative "demo_tape/lexer"
   require_relative "demo_tape/runner"
   require_relative "demo_tape/exporter"
@@ -26,6 +27,7 @@ module DemoTape
   require_relative "demo_tape/theme"
   require_relative "demo_tape/ttyd"
   require_relative "demo_tape/spinner"
+  require_relative "demo_tape/formatter"
 
   ParseError = Class.new(StandardError)
 end
