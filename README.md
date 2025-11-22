@@ -1,11 +1,11 @@
-# demotape
+# Demo Tape
 
 [![Tests](https://github.com/fnando/demotape/workflows/ruby-tests/badge.svg)](https://github.com/fnando/demotape)
 [![Gem](https://img.shields.io/gem/v/demotape.svg)](https://rubygems.org/gems/demotape)
 [![Gem](https://img.shields.io/gem/dt/demotape.svg)](https://rubygems.org/gems/demotape)
 [![MIT License](https://img.shields.io/:License-MIT-blue.svg)](https://tldrlegal.com/license/mit-license)
 
-![DemoTape in action!](https://github.com/fnando/demotape/raw/main/examples/fastfetch.gif)
+![Demo Tape in action!](https://github.com/fnando/demotape/raw/main/examples/fastfetch.gif)
 
 Record terminal sessions from your CLI tools
 
@@ -26,9 +26,18 @@ Or add the following line to your project's Gemfile:
 gem "demotape"
 ```
 
+### Editor Integration
+
+Demo Tape has extensions for several editors to provide syntax highlighting and
+snippets.
+
+- Sublime Text: https://github.com/fnando/sublime-demotape/
+- VSCode: https://marketplace.visualstudio.com/items?itemName=fnando.demotape
+- vim: https://github.com/fnando/demotape/blob/main/editors/vim/README.md
+
 ### Shell Completion
 
-DemoTape supports shell completion for Bash, Zsh, Fish, and PowerShell. To set
+Demo Tape supports shell completion for Bash, Zsh, Fish, and PowerShell. To set
 up completion for your shell:
 
 **Bash:**
@@ -73,7 +82,7 @@ demotape completion --shell=powershell | Out-String | Invoke-Expression
 
 ## Usage
 
-Run a DemoTape script:
+Run a Demo Tape script:
 
 ```console
 $ demotape run path/to/script.tape
@@ -109,12 +118,12 @@ $ echo "Type 'echo \"it works with stdin too\"'\nEnter\nSleep 5" | \
 ### Examples
 
 The [`examples/`](https://github.com/fnando/demotape/tree/main/examples) folder
-contains several DemoTape scripts showcasing different features. There you'll
+contains several Demo Tape scripts showcasing different features. There you'll
 also find the generated output files (videos, GIFs, and screenshots).
 
-## DemoTape Syntax
+## Demo Tape Syntax
 
-DemoTape scripts (`.tape` files) consist of a series of commands, one per line.
+Demo Tape scripts (`.tape` files) consist of a series of commands, one per line.
 Each command performs an action in the terminal recording, such as typing text,
 pressing keys, waiting, or configuring the recording session.
 
@@ -579,7 +588,7 @@ Set padding 20
 # Start recording
 Sleep 1
 
-Type "echo 'Hello, DemoTape!'"
+Type "echo 'Hello, Demo Tape!'"
 Enter
 Sleep 500ms
 
@@ -639,7 +648,7 @@ quirks and adding some extra features.
 > [!WARNING]
 >
 > The syntax is not fully compatible with vhs. Although some commands are
-> similar, there are many differences. Please refer to the DemoTape syntax
+> similar, there are many differences. Please refer to the Demo Tape syntax
 > documentation above.
 
 ## Maintainer
@@ -663,6 +672,6 @@ found at https://github.com/fnando/demotape/blob/main/LICENSE.md.
 
 ## Code of Conduct
 
-Everyone interacting in the demotape project's codebases, issue trackers, chat
+Everyone interacting in the Demo Tape project's codebases, issue trackers, chat
 rooms and mailing lists is expected to follow the
 [code of conduct](https://github.com/fnando/demotape/blob/main/CODE_OF_CONDUCT.md).

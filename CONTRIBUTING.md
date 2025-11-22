@@ -1,4 +1,4 @@
-# Contributing to demotape
+# Contributing to Demo Tape
 
 👍🎉 First off, thanks for taking the time to contribute! 🎉👍
 
@@ -32,7 +32,7 @@ by [opening an issue on Github](https://github.com/fnando/demotape/issues).
 When you're ready to make your pull request, follow checklist below to make sure
 your contribution is according to how this project works.
 
-1. [Fork](https://help.github.com/forking/) demotape
+1. [Fork](https://help.github.com/forking/) Demo Tape
 2. Create a topic branch - `git checkout -b my_branch`
 3. Make your changes using [descriptive commit messages](#commit-messages)
 4. Update CHANGELOG.md describing your changes by adding an entry to the
