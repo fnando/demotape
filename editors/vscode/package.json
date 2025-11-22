@@ -1,12 +1,23 @@
 {
   "name": "demotape",
-  "displayName": "DemoTape",
+  "displayName": "Demo Tape",
   "description": "Syntax highlighting for DemoTape (.tape) files",
-  "version": "0.1.0",
+  "version": "0.0.2",
   "publisher": "fnando",
+  "icon": "icon.png",
+  "license": "MIT",
+  "publisher": "fnando",
+  "repository": {
+    "url": "https://github.com/fnando/demotape"
+  },
   "engines": {
     "vscode": "^1.50.0"
   },
+  "files": [
+    "*.json",
+    "*.png",
+    "*.md"
+  ],
   "categories": [
     "Programming Languages"
   ],
@@ -14,8 +25,13 @@
     "languages": [
       {
         "id": "demotape",
-        "aliases": ["DemoTape", "demotape"],
-        "extensions": [".tape"],
+        "aliases": [
+          "DemoTape",
+          "demotape"
+        ],
+        "extensions": [
+          ".tape"
+        ],
         "configuration": "./language-configuration.json"
       }
     ],

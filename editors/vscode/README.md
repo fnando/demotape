@@ -1,8 +1,18 @@
-# DemoTape VSCode Extension
+# Demo Tape VSCode Extension
 
-Syntax highlighting for DemoTape (`.tape`) files in Visual Studio Code.
+Syntax highlighting for [Demo Tape](https://github.com/fnando/demotape)
+(`.tape`) files in Visual Studio Code.
 
 ## Installation
+
+### Marketplace
+
+1. Open Visual Studio Code
+2. Go to the Extensions view (`Ctrl+Shift+X` or `Cmd+Shift+X` on macOS)
+3. Search for
+   [DemoTape](https://marketplace.visualstudio.com/items?itemName=fnando.demotape)
+
+### Manual Installation
 
 Copy this directory to your VSCode extensions folder:
 

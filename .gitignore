@@ -13,3 +13,4 @@
 examples/themes/*.mp4
 /themes.json
 *.sw*
+*.vsix
