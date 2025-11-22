@@ -1,0 +1,11 @@
+name = "Demo Tape"
+grammar = "demotape"
+path_suffixes = ["tape"]
+line_comments = ["# "]
+brackets = [
+  { start = "\"", end = "\"", close = true, newline = false },
+  { start = "'", end = "'", close = true, newline = false },
+  { start = "(", end = ")", close = true, newline = true },
+  { start = "[", end = "]", close = true, newline = true },
+  { start = "{", end = "}", close = true, newline = true },
+]

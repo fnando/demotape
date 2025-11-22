@@ -1,6 +1,6 @@
 %YAML 1.2
 ---
-name: DemoTape
+name: Demo Tape
 file_extensions:
   - tape
 scope: source.demotape

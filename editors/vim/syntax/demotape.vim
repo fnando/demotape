@@ -1,5 +1,5 @@
 " Vim syntax file
-" Language: DemoTape
+" Language: Demo Tape
 " Maintainer: Nando Vieira
 " Latest Revision: 2024-11-12
 

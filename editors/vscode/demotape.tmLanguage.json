@@ -1,9 +1,13 @@
 {
   "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
-  "name": "DemoTape",
+  "name": "Demo Tape",
   "scopeName": "source.demotape",
   "fileTypes": ["tape"],
-  "patterns": [{ "include": "#comments" }, { "include": "#blocks" }, { "include": "#commands" }],
+  "patterns": [
+    { "include": "#comments" },
+    { "include": "#blocks" },
+    { "include": "#commands" }
+  ],
   "repository": {
     "blocks": {
       "patterns": [
@@ -19,10 +23,7 @@
           "endCaptures": {
             "1": { "name": "keyword.control.demotape" }
           },
-          "patterns": [
-            { "include": "#comments" },
-            { "include": "#commands" }
-          ]
+          "patterns": [{ "include": "#comments" }, { "include": "#commands" }]
         }
       ]
     },

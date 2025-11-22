@@ -1,0 +1,27 @@
+{
+  "name": "demotape",
+  "version": "0.0.1",
+  "description": "Tree-sitter grammar for DemoTape",
+  "main": "bindings/node",
+  "keywords": [
+    "tree-sitter",
+    "demotape",
+    "parser"
+  ],
+  "author": "Nando Vieira <me@fnando.com>",
+  "license": "MIT",
+  "dependencies": {
+    "nan": "^2.14.0"
+  },
+  "devDependencies": {
+    "tree-sitter-cli": "^0.20.0"
+  },
+  "tree-sitter": [
+    {
+      "scope": "source.demotape",
+      "file-types": [
+        "tape"
+      ]
+    }
+  ]
+}

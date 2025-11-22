@@ -1,0 +1,862 @@
+[
+  {
+    "type": "boolean",
+    "named": true,
+    "fields": {}
+  },
+  {
+    "type": "command",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": false,
+      "required": true,
+      "types": [
+        {
+          "type": "clear_command",
+          "named": true
+        },
+        {
+          "type": "copy_command",
+          "named": true
+        },
+        {
+          "type": "group_invocation",
+          "named": true
+        },
+        {
+          "type": "include_command",
+          "named": true
+        },
+        {
+          "type": "key_command",
+          "named": true
+        },
+        {
+          "type": "output_command",
+          "named": true
+        },
+        {
+          "type": "paste_command",
+          "named": true
+        },
+        {
+          "type": "pause_command",
+          "named": true
+        },
+        {
+          "type": "require_command",
+          "named": true
+        },
+        {
+          "type": "resume_command",
+          "named": true
+        },
+        {
+          "type": "run_command",
+          "named": true
+        },
+        {
+          "type": "screenshot_command",
+          "named": true
+        },
+        {
+          "type": "send_command",
+          "named": true
+        },
+        {
+          "type": "set_command",
+          "named": true
+        },
+        {
+          "type": "sleep_command",
+          "named": true
+        },
+        {
+          "type": "type_command",
+          "named": true
+        },
+        {
+          "type": "type_file_command",
+          "named": true
+        },
+        {
+          "type": "wait_command",
+          "named": true
+        },
+        {
+          "type": "wait_until_command",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "copy_command",
+    "named": true,
+    "fields": {
+      "text": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "string",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "duration_modifier",
+    "named": true,
+    "fields": {
+      "duration": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "duration",
+            "named": true
+          },
+          {
+            "type": "number",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "group_block",
+    "named": true,
+    "fields": {
+      "name": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "identifier",
+            "named": true
+          }
+        ]
+      }
+    },
+    "children": {
+      "multiple": true,
+      "required": false,
+      "types": [
+        {
+          "type": "command",
+          "named": true
+        },
+        {
+          "type": "comment",
+          "named": true
+        },
+        {
+          "type": "newline",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "group_invocation",
+    "named": true,
+    "fields": {
+      "group": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "identifier",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "include_command",
+    "named": true,
+    "fields": {
+      "path": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "string",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "key_combination",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "letter_key",
+          "named": true
+        },
+        {
+          "type": "modifier_key",
+          "named": true
+        },
+        {
+          "type": "special_key",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "key_command",
+    "named": true,
+    "fields": {
+      "count": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "number",
+            "named": true
+          }
+        ]
+      },
+      "key": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "key_combination",
+            "named": true
+          }
+        ]
+      }
+    },
+    "children": {
+      "multiple": false,
+      "required": false,
+      "types": [
+        {
+          "type": "duration_modifier",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "modifier_key",
+    "named": true,
+    "fields": {}
+  },
+  {
+    "type": "output_command",
+    "named": true,
+    "fields": {
+      "path": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "string",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "require_command",
+    "named": true,
+    "fields": {
+      "command": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "identifier",
+            "named": true
+          },
+          {
+            "type": "string",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "run_command",
+    "named": true,
+    "fields": {
+      "command": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "string",
+            "named": true
+          }
+        ]
+      }
+    },
+    "children": {
+      "multiple": false,
+      "required": false,
+      "types": [
+        {
+          "type": "duration_modifier",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "screenshot_command",
+    "named": true,
+    "fields": {
+      "path": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "string",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "send_command",
+    "named": true,
+    "fields": {
+      "text": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "string",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "set_command",
+    "named": true,
+    "fields": {
+      "option": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "set_option",
+            "named": true
+          }
+        ]
+      },
+      "value": {
+        "multiple": true,
+        "required": true,
+        "types": [
+          {
+            "type": "boolean",
+            "named": true
+          },
+          {
+            "type": "duration",
+            "named": true
+          },
+          {
+            "type": "number",
+            "named": true
+          },
+          {
+            "type": "string",
+            "named": true
+          },
+          {
+            "type": "unquoted_string",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "sleep_command",
+    "named": true,
+    "fields": {
+      "duration": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "duration",
+            "named": true
+          },
+          {
+            "type": "number",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "source_file",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": false,
+      "types": [
+        {
+          "type": "command",
+          "named": true
+        },
+        {
+          "type": "comment",
+          "named": true
+        },
+        {
+          "type": "group_block",
+          "named": true
+        },
+        {
+          "type": "newline",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "special_key",
+    "named": true,
+    "fields": {}
+  },
+  {
+    "type": "string",
+    "named": true,
+    "fields": {
+      "content": {
+        "multiple": true,
+        "required": false,
+        "types": [
+          {
+            "type": "escape_sequence",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "type_command",
+    "named": true,
+    "fields": {
+      "text": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "string",
+            "named": true
+          }
+        ]
+      }
+    },
+    "children": {
+      "multiple": false,
+      "required": false,
+      "types": [
+        {
+          "type": "duration_modifier",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "type_file_command",
+    "named": true,
+    "fields": {
+      "path": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "string",
+            "named": true
+          }
+        ]
+      }
+    },
+    "children": {
+      "multiple": false,
+      "required": false,
+      "types": [
+        {
+          "type": "duration_modifier",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "wait_command",
+    "named": true,
+    "fields": {
+      "duration": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "duration",
+            "named": true
+          },
+          {
+            "type": "number",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "wait_until_command",
+    "named": true,
+    "fields": {
+      "pattern": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "regex",
+            "named": true
+          }
+        ]
+      }
+    },
+    "children": {
+      "multiple": false,
+      "required": false,
+      "types": [
+        {
+          "type": "duration_modifier",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "\"",
+    "named": false
+  },
+  {
+    "type": "\"\"\"",
+    "named": false
+  },
+  {
+    "type": "'",
+    "named": false
+  },
+  {
+    "type": "+",
+    "named": false
+  },
+  {
+    "type": ",",
+    "named": false
+  },
+  {
+    "type": "@",
+    "named": false
+  },
+  {
+    "type": "Add",
+    "named": false
+  },
+  {
+    "type": "Alt",
+    "named": false
+  },
+  {
+    "type": "BackSlash",
+    "named": false
+  },
+  {
+    "type": "Backspace",
+    "named": false
+  },
+  {
+    "type": "Cancel",
+    "named": false
+  },
+  {
+    "type": "Colon",
+    "named": false
+  },
+  {
+    "type": "Command",
+    "named": false
+  },
+  {
+    "type": "Control",
+    "named": false
+  },
+  {
+    "type": "Copy",
+    "named": false
+  },
+  {
+    "type": "Ctrl",
+    "named": false
+  },
+  {
+    "type": "Decimal",
+    "named": false
+  },
+  {
+    "type": "Delete",
+    "named": false
+  },
+  {
+    "type": "Divide",
+    "named": false
+  },
+  {
+    "type": "Down",
+    "named": false
+  },
+  {
+    "type": "End",
+    "named": false
+  },
+  {
+    "type": "Enter",
+    "named": false
+  },
+  {
+    "type": "Equals",
+    "named": false
+  },
+  {
+    "type": "Esc",
+    "named": false
+  },
+  {
+    "type": "Escape",
+    "named": false
+  },
+  {
+    "type": "Group",
+    "named": false
+  },
+  {
+    "type": "Help",
+    "named": false
+  },
+  {
+    "type": "Home",
+    "named": false
+  },
+  {
+    "type": "Include",
+    "named": false
+  },
+  {
+    "type": "Insert",
+    "named": false
+  },
+  {
+    "type": "Left",
+    "named": false
+  },
+  {
+    "type": "Meta",
+    "named": false
+  },
+  {
+    "type": "Multiply",
+    "named": false
+  },
+  {
+    "type": "Option",
+    "named": false
+  },
+  {
+    "type": "Output",
+    "named": false
+  },
+  {
+    "type": "PageDown",
+    "named": false
+  },
+  {
+    "type": "PageUp",
+    "named": false
+  },
+  {
+    "type": "Require",
+    "named": false
+  },
+  {
+    "type": "Return",
+    "named": false
+  },
+  {
+    "type": "Right",
+    "named": false
+  },
+  {
+    "type": "Run",
+    "named": false
+  },
+  {
+    "type": "Screenshot",
+    "named": false
+  },
+  {
+    "type": "Semicolon",
+    "named": false
+  },
+  {
+    "type": "Send",
+    "named": false
+  },
+  {
+    "type": "Separator",
+    "named": false
+  },
+  {
+    "type": "Set",
+    "named": false
+  },
+  {
+    "type": "Shift",
+    "named": false
+  },
+  {
+    "type": "Slash",
+    "named": false
+  },
+  {
+    "type": "Sleep",
+    "named": false
+  },
+  {
+    "type": "Space",
+    "named": false
+  },
+  {
+    "type": "Subtract",
+    "named": false
+  },
+  {
+    "type": "Tab",
+    "named": false
+  },
+  {
+    "type": "Type",
+    "named": false
+  },
+  {
+    "type": "TypeFile",
+    "named": false
+  },
+  {
+    "type": "Up",
+    "named": false
+  },
+  {
+    "type": "Wait",
+    "named": false
+  },
+  {
+    "type": "WaitUntil",
+    "named": false
+  },
+  {
+    "type": "clear_command",
+    "named": true
+  },
+  {
+    "type": "comment",
+    "named": true
+  },
+  {
+    "type": "do",
+    "named": false
+  },
+  {
+    "type": "duration",
+    "named": true
+  },
+  {
+    "type": "end",
+    "named": false
+  },
+  {
+    "type": "escape_sequence",
+    "named": true
+  },
+  {
+    "type": "false",
+    "named": false
+  },
+  {
+    "type": "identifier",
+    "named": true
+  },
+  {
+    "type": "letter_key",
+    "named": true
+  },
+  {
+    "type": "newline",
+    "named": true
+  },
+  {
+    "type": "number",
+    "named": true
+  },
+  {
+    "type": "paste_command",
+    "named": true
+  },
+  {
+    "type": "pause_command",
+    "named": true
+  },
+  {
+    "type": "regex",
+    "named": true
+  },
+  {
+    "type": "resume_command",
+    "named": true
+  },
+  {
+    "type": "set_option",
+    "named": true
+  },
+  {
+    "type": "true",
+    "named": false
+  },
+  {
+    "type": "unquoted_string",
+    "named": true
+  }
+]

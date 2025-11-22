@@ -15,7 +15,7 @@ module DemoTape
       "Ctrl" => :control,
       "Alt" => :alt,
       "Option" => :alt,
-      "Pause" => :pause,
+      # "Pause" => :pause,
       "Escape" => :escape,
       "Esc" => :escape,
       "Space" => :space,

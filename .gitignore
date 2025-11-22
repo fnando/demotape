@@ -14,3 +14,10 @@ examples/themes/*.mp4
 /themes.json
 *.sw*
 *.vsix
+
+# Tree-sitter
+editors/zed/tree-sitter/node_modules/
+editors/zed/tree-sitter/build/
+editors/zed/tree-sitter/*.node
+editors/zed/grammars/demotape
+editors/zed/tree-sitter/examples
