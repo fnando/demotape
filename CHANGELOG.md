@@ -11,10 +11,11 @@ Prefix your message with one of the following:
 - [Security] in case of vulnerabilities.
 -->
 
-## Unreleased
+## v0.0.4
 
 - [Fixed] Fix how Thor handle defaults for arrays.
 - [Fixed] Fix reading tapes from stdin.
+- [Fixed] Fix `demotape help run` to expand to `_run`.
 
 ## v0.0.3
 
