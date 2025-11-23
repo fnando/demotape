@@ -11,6 +11,11 @@ Prefix your message with one of the following:
 - [Security] in case of vulnerabilities.
 -->
 
+## Unreleased
+
+- [Fixed] Fix how Thor handle defaults for arrays.
+- [Fixed] Fix reading tapes from stdin.
+
 ## v0.0.3
 
 - [Changed] Re-implemented parser.

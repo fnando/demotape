@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "thor"
+require_relative "ext/thor"
 require "thor/completion"
 
 module DemoTape
@@ -144,8 +145,15 @@ module DemoTape
 
       if file_path == ""
         file_path = "<stdin>"
-        content = $stdin.read
-        options[:output_path] = "stdin.mp4" if options.output_path.empty?
+
+        if $stdin.tty?
+          help
+          exit 1
+        else
+          content = $stdin.read
+        end
+
+        options[:output_path] = ["stdin.mp4"] if options.output_path.empty?
       else
         content = File.read(file_path)
       end
