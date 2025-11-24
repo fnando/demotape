@@ -11,7 +11,7 @@ Prefix your message with one of the following:
 - [Security] in case of vulnerabilities.
 -->
 
-## Unreleased
+## v0.0.5
 
 - [Changed] Add newline to multiline strings if they don't end with one.
 - [Fixed] Ensure multiline strings are passed as the argument.
