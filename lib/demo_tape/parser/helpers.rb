@@ -266,8 +266,18 @@ module DemoTape
         compute_at_duration!(tokens, options)
 
         # Find the string/value argument
-        string_token = tokens.find(&:string?)
-        args = string_token ? string_token.value : ""
+        string_token = tokens.find(&:string?) ||
+                       tokens.find(&:multiline_string?)
+
+        args = case string_token
+               when Token::String
+                 string_token.value
+               when Token::MultilineString
+                 text = string_token.value
+                 text.end_with?("\n") ? text : "#{text}\n"
+               else
+                 ""
+               end
 
         # For Sleep, Wait - check for duration/number
         if %w[

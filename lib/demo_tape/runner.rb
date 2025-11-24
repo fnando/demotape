@@ -31,9 +31,10 @@ module DemoTape
     end
 
     def fail_with(error)
-      error = error.message if error.respond_to?(:message)
+      error_message = error
+      error_message = error.message if error.respond_to?(:message)
 
-      thor.say_error "\nERROR: #{error}", :red
+      thor.say_error "\nERROR: #{error_message}", :red
       puts error.backtrace if error.respond_to?(:backtrace)
       exit 1
     end

@@ -268,7 +268,7 @@ module DemoTape
           duration = token.value[:raw].to_s.strip
           duration = "#{duration}s" if token.value[:unit].to_s.strip == ""
           values << thor.set_color(duration, :cyan)
-        when Token::String
+        when Token::String, Token::MultilineString
           values << thor.set_color(token.raw, :yellow)
         when Token::Operator
           values << thor.set_color(token.value, :white)
