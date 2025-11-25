@@ -13,6 +13,9 @@ Prefix your message with one of the following:
 
 ## Unreleased
 
+- [Added] Add `demotape run --working-dir` to specify the working directory for
+  commands. Notice that this changes all path references to be relative to the
+  working directory, including `--output-path` (if it's a relative path).
 - [Fixed] Fix issue where `Set typing_speed` wasn't recognized.
 - [Fixed] Fix issue where `Set shell` wasn't recognized.
 

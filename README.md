@@ -109,6 +109,11 @@ $ echo "Type 'echo \"it works with stdin too\"'\nEnter\nSleep 5" | \
         info  Finished in 11.92s
 ```
 
+> [!TIP]
+>
+> Notice that when using `--working-dir`, all path references will be relative
+> to the working directory, including `--output-path`.
+
 ### Output formats
 
 - When exporting videos, you can choose between `.mp4`, `.webm` or `.avi`.

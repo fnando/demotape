@@ -13,6 +13,10 @@ module DemoTape
     end
 
     desc "run PATH", "Runs a demo tape"
+    option :working_dir,
+           type: :string,
+           desc: "Working directory to run the commands in",
+           default: Dir.pwd
     option :typing_speed,
            type: :string,
            default: "50ms",
@@ -158,7 +162,9 @@ module DemoTape
         content = File.read(file_path)
       end
 
-      Runner.new(file_path:, content:, thor: shell, options:).run
+      Dir.chdir(options.working_dir) do
+        Runner.new(file_path:, content:, thor: shell, options:).run
+      end
     end
 
     desc "themes", "Lists available built-in themes"
