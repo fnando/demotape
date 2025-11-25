@@ -543,4 +543,49 @@ class ParserSetTest < Minitest::Test
 
     assert_equal expected, error.message
   end
+
+  test "parses ALL variations" do
+    source = <<~TAPE
+      Set width 1280
+        Set height 720
+        Set font_family "Menlo"
+        Set font_size 16
+        Set line_height 1.5
+        Set theme "default"
+        Set theme "default_light"
+        Set theme "themes/some_theme.json"
+        Set theme.background "#222222"
+        Set theme.foreground "#ffffff"
+        Set theme.cursor "#00ff00"
+        Set theme.selection "#444444"
+        Set padding 20
+        Set padding 20, 40
+        Set padding 10, 20, 30
+        Set padding 10, 20, 30, 40
+        Set margin 60
+        Set margin 20, 40
+        Set margin 10, 20, 30
+        Set margin 10, 20, 30, 40
+        Set margin_fill "#6b50ff"
+        Set margin_fill "examples/background.png"
+        Set cursor_blink true
+        Set cursor_blink false
+        Set cursor_style "block"
+        Set cursor_style "bar"
+        Set cursor_style "underline"
+        Set cursor_width 2
+        Set typing_speed 50ms
+        Set typing_speed 0.1s
+        Set loop true
+        Set loop false
+        Set loop_delay 5s
+        Set run_enter_delay 300ms
+        Set run_sleep 1s
+        Set shell "bash"
+        Set shell "zsh"
+        Set shell "fish"
+    TAPE
+
+    parse(source)
+  end
 end
