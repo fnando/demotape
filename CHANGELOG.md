@@ -13,7 +13,8 @@ Prefix your message with one of the following:
 
 ## Unreleased
 
-- [Fixed] Fixed issue where `Set typing_speed` wasn't recognized.
+- [Fixed] Fix issue where `Set typing_speed` wasn't recognized.
+- [Fixed] Fix issue where `Set shell` wasn't recognized.
 
 ## v0.0.5
 

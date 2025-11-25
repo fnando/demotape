@@ -353,7 +353,7 @@ module DemoTape
 
       # Set attribute STRING
       rules.push identifier("Set") +
-                 identifier("theme", "font_family", "margin_fill") +
+                 identifier("theme", "font_family", "margin_fill", "shell") +
                  string
 
       # Set cursor_style STRING

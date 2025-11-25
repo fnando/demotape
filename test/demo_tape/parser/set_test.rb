@@ -516,6 +516,14 @@ class ParserSetTest < Minitest::Test
     assert_equal({number: 1, unit: "s", raw: "1s"}, command[:tokens][4].value)
   end
 
+  test "parses shell" do
+    result = parse("Set shell 'bash'\n")
+
+    command = result[0]
+    assert_equal "shell", command[:tokens][2].value
+    assert_equal "bash", command[:tokens][4].value
+  end
+
   test "parses Set loop_delay with duration" do
     result = parse("Set loop_delay 2s\n")
 
