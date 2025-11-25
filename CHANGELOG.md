@@ -11,7 +11,7 @@ Prefix your message with one of the following:
 - [Security] in case of vulnerabilities.
 -->
 
-## Unreleased
+## v0.0.6
 
 - [Added] Add `demotape run --working-dir` to specify the working directory for
   commands. Notice that this changes all path references to be relative to the
