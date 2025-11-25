@@ -508,6 +508,14 @@ class ParserSetTest < Minitest::Test
     assert_equal "false", command[:tokens][4].value
   end
 
+  test "parses typing speed" do
+    result = parse("Set typing_speed 1s\n")
+
+    command = result[0]
+    assert_equal "typing_speed", command[:tokens][2].value
+    assert_equal({number: 1, unit: "s", raw: "1s"}, command[:tokens][4].value)
+  end
+
   test "parses Set loop_delay with duration" do
     result = parse("Set loop_delay 2s\n")
 

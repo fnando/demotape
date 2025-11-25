@@ -11,6 +11,10 @@ Prefix your message with one of the following:
 - [Security] in case of vulnerabilities.
 -->
 
+## Unreleased
+
+- [Fixed] Fixed issue where `Set typing_speed` wasn't recognized.
+
 ## v0.0.5
 
 - [Changed] Add newline to multiline strings if they don't end with one.
