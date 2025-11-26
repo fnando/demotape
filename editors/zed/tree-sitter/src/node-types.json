@@ -87,6 +87,10 @@
         {
           "type": "wait_until_command",
           "named": true
+        },
+        {
+          "type": "wait_until_done_command",
+          "named": true
         }
       ]
     }
@@ -560,6 +564,21 @@
     }
   },
   {
+    "type": "wait_until_done_command",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": false,
+      "required": false,
+      "types": [
+        {
+          "type": "duration_modifier",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
     "type": "\"",
     "named": false
   },
@@ -601,6 +620,10 @@
   },
   {
     "type": "Cancel",
+    "named": false
+  },
+  {
+    "type": "Cmd",
     "named": false
   },
   {
@@ -785,6 +808,10 @@
   },
   {
     "type": "WaitUntil",
+    "named": false
+  },
+  {
+    "type": "WaitUntilDone",
     "named": false
   },
   {

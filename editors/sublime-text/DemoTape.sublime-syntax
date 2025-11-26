@@ -40,10 +40,10 @@ contexts:
       captures:
         2: entity.name.function.demotape
 
-    # Commands with @ duration/speed
-    - match: '\b(Type|TypeFile|WaitUntil|Run)\b'
+    # Commands with @ duration
+    - match: '\b(Type|TypeFile|WaitUntil|WaitUntilDone|Run)\b'
       scope: keyword.control.demotape
-      push: command_with_speed_or_timeout
+      push: command_with_duration
 
     # Set command with option value
     - match: '\b(Set)\b'
@@ -145,7 +145,7 @@ contexts:
     - match: "$"
       pop: true
 
-  command_with_speed_or_timeout:
+  command_with_duration:
     - match: "@"
       scope: keyword.operator.demotape
       push: duration_value

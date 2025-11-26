@@ -86,13 +86,10 @@ module DemoTape
       TypeFile
       Wait
       WaitUntil
+      WaitUntilDone
     ].freeze
 
     META_COMMANDS = %w[Group Include Output Require Set].freeze
-    COMMANDS_WITH_DURATION = KEY_MAPPING.keys +
-                             %w[Run Type TypeFile WaitUntil Wait Sleep].freeze
-    COMMANDS_WITH_COUNT = KEY_MAPPING.keys + %w[Wait Sleep Set]
-    VALID_TIME_UNITS = %w[ms s m h].freeze
 
     # Valid keys that can be used in key combos
     VALID_KEYS = KEY_MAPPING.keys + %w[

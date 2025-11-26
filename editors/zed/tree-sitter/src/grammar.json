@@ -95,6 +95,10 @@
         },
         {
           "type": "SYMBOL",
+          "name": "wait_until_done_command"
+        },
+        {
+          "type": "SYMBOL",
           "name": "wait_until_command"
         },
         {
@@ -260,6 +264,27 @@
             "type": "SYMBOL",
             "name": "string"
           }
+        }
+      ]
+    },
+    "wait_until_done_command": {
+      "type": "SEQ",
+      "members": [
+        {
+          "type": "STRING",
+          "value": "WaitUntilDone"
+        },
+        {
+          "type": "CHOICE",
+          "members": [
+            {
+              "type": "SYMBOL",
+              "name": "duration_modifier"
+            },
+            {
+              "type": "BLANK"
+            }
+          ]
         }
       ]
     },
@@ -895,6 +920,10 @@
         {
           "type": "STRING",
           "value": "Command"
+        },
+        {
+          "type": "STRING",
+          "value": "Cmd"
         }
       ]
     },

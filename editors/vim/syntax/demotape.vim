@@ -11,7 +11,7 @@ endif
 syn match demotapeComment "#.*$"
 
 " Commands
-syn keyword demotapeCommand Type TypeFile WaitUntil Run Set Output Copy Paste Send Include Screenshot
+syn keyword demotapeCommand Type TypeFile WaitUntil WaitUntilDone Run Set Output Copy Paste Send Include Screenshot
 syn keyword demotapeCommand Wait Sleep Require Pause Resume Clear nextgroup=demotapeString,demotapeDuration,demotapeNumber skipwhite
 
 " Group blocks

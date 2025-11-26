@@ -29,3 +29,10 @@ theme-examples:
 			optipng -quiet -o2 examples/themes/$${name}.png; \
 		fi; \
 	done;
+
+zed:
+	@cd editors/zed/tree-sitter && \
+			npm install && \
+			node_modules/.bin/tree-sitter generate && \
+			node_modules/.bin/tree-sitter build-wasm && \
+			mv tree-sitter-demotape.wasm ../grammars/demotape.wasm

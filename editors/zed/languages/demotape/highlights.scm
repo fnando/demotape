@@ -5,6 +5,7 @@
 "Type" @keyword
 "TypeFile" @keyword
 "Run" @keyword
+"WaitUntilDone" @keyword
 "WaitUntil" @keyword
 "Set" @keyword
 "Output" @keyword

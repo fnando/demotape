@@ -45,8 +45,8 @@
           }
         },
         {
-          "comment": "Commands with @ duration/speed",
-          "match": "\\b(Type|TypeFile|WaitUntil|Run)\\b",
+          "comment": "Commands with @ duration",
+          "match": "\\b(Type|TypeFile|WaitUntil|WaitUntilDone|Run)\\b",
           "name": "keyword.control.demotape",
           "captures": {
             "1": { "name": "keyword.control.demotape" }
@@ -119,7 +119,7 @@
           }
         },
         {
-          "comment": "At symbol for speed/timeout",
+          "comment": "At symbol for duration",
           "match": "@",
           "name": "keyword.operator.demotape"
         },

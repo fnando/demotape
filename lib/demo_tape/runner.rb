@@ -530,6 +530,14 @@ module DemoTape
       session.execute_script(script)
     end
 
+    def run_wait_until_done(command)
+      run_wait_until Command.new(
+        "WaitUntil",
+        {pattern: /::done::/},
+        duration: command.options[:duration]
+      )
+    end
+
     def run_wait_until(command)
       spinner = Spinner.new(phrases: [
         "Searching high and low…",

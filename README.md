@@ -282,6 +282,14 @@ WaitUntil@10s /complete/
 The pattern is a regular expression. The command waits until the terminal output
 matches the pattern or the timeout is reached.
 
+**WaitUntilDone** - Wait for output matching `/::done::`. This is just a
+shortcut for `WaitUntil /::done::/`.
+
+```demotape
+WaitUntilDone
+WaitUntilDone@5s
+```
+
 #### Clipboard
 
 **Copy** - Copy text to clipboard

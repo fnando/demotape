@@ -330,6 +330,11 @@ module DemoTape
                  duration +
                  string
 
+      # WaitUntilDone
+      rules.push identifier("WaitUntilDone")
+      rules.push identifier("WaitUntilDone") + operator("@") + duration
+      rules.push identifier("WaitUntilDone") + operator("@") + number
+
       # WaitUntil
       rules.push identifier("WaitUntil") + regex
       rules.push identifier("WaitUntil") + operator("@") + duration + regex

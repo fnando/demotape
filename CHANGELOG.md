@@ -11,6 +11,11 @@ Prefix your message with one of the following:
 - [Security] in case of vulnerabilities.
 -->
 
+## Unreleased
+
+- [Added] Add `WaitUntilDone`, which is just a shortcut for
+  `WaitUntil /::done::/`.
+
 ## v0.0.7
 
 - [Fixed] Fix key combos that had numbers in them not being recognized.

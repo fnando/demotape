@@ -23,6 +23,8 @@
     { "trigger": "Sleep", "contents": "Sleep ${1:1s}" },
     { "trigger": "WaitUntil", "contents": "WaitUntil /${1:pattern}/" },
     { "trigger": "WaitUntil@", "contents": "WaitUntil@${1:5s} /${2:pattern}/" },
+    { "trigger": "WaitUntilDone", "contents": "WaitUntilDone" },
+    { "trigger": "WaitUntilDone@", "contents": "WaitUntilDone@${1:5s}" },
 
     // Control commands
     "Clear",

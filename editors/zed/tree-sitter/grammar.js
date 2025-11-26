@@ -36,6 +36,7 @@ module.exports = grammar({
     command: $ => choice(
       $.type_command,
       $.run_command,
+      $.wait_until_done_command,
       $.wait_until_command,
       $.type_file_command,
       $.set_command,
@@ -79,6 +80,12 @@ module.exports = grammar({
       'Run',
       optional($.duration_modifier),
       field('command', $.string),
+    ),
+
+    // WaitUntilDone command
+    wait_until_done_command: $ => seq(
+      'WaitUntilDone',
+      optional($.duration_modifier),
     ),
 
     // WaitUntil command
