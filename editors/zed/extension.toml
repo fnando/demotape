@@ -5,6 +5,7 @@ version = "0.0.1"
 schema_version = 1
 authors = ["Nando Vieira <me@fnando.com>"]
 repository = "https://github.com/fnando/demotape"
+snippets = "./snippets/demotape.json"
 
 [grammars.demotape]
 repository = "https://github.com/fnando/demotape"
