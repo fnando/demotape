@@ -97,7 +97,7 @@ contexts:
   key_combo:
     - match: '\+'
       scope: keyword.operator.demotape
-    - match: '\b(Ctrl|Control|Alt|Option|Shift|Meta|Command|Enter|Return|Tab|Backspace|Delete|Escape|Esc|Space|Up|Down|Left|Right|Home|End|PageUp|PageDown|Insert|Cancel|Help|Pause|Semicolon|Colon|Equals|Slash|BackSlash|Numpad[0-9]|Multiply|Add|Separator|Subtract|Decimal|Divide|F[1-9]|F1[0-2]|[A-Za-z0-9])\b'
+    - match: '\b(Ctrl|Control|Alt|Option|Shift|Meta|Command|Cmd|Enter|Return|Tab|Backspace|Delete|Escape|Esc|Space|Up|Down|Left|Right|Home|End|PageUp|PageDown|Insert|Cancel|Help|Pause|Semicolon|Colon|Equals|Slash|BackSlash|Numpad[0-9]|Multiply|Add|Separator|Subtract|Decimal|Divide|F[1-9]|F1[0-2]|[A-Za-z0-9])\b'
       scope: keyword.control.demotape
     - match: '\d+'
       scope: constant.numeric.integer.demotape
