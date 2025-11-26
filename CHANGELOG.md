@@ -11,6 +11,10 @@ Prefix your message with one of the following:
 - [Security] in case of vulnerabilities.
 -->
 
+## Unreleased
+
+- [Fixed] Fix key combos that had numbers in them not being recognized.
+
 ## v0.0.6
 
 - [Added] Add `demotape run --working-dir` to specify the working directory for

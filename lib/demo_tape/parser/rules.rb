@@ -42,9 +42,23 @@ module DemoTape
           results.any?
         end
 
+        def |(other)
+          Any.new(self, other)
+        end
+
         def +(other)
           expectations << other
           self
+        end
+      end
+
+      class Any
+        def initialize(*types)
+          @types = types
+        end
+
+        def valid?(*)
+          @types.any? { it.valid?(*) }
         end
       end
 
@@ -232,50 +246,38 @@ module DemoTape
       # Group invocations
       rules.push identifier(/^[a-z0-9_]+$/)
 
+      key = identifier(*Command::VALID_KEYS) | number
+
       # KEY+KEY
+      rules.push identifier(*Command::KEY_MAPPING.keys) + operator("+") + key
       rules.push identifier(*Command::KEY_MAPPING.keys) +
                  operator("+") +
-                 identifier(*Command::VALID_KEYS)
+                 key +
+                 number
 
       # KEY+KEY+KEY
       rules.push identifier(*Command::KEY_MAPPING.keys) +
                  operator("+") +
-                 identifier(*Command::VALID_KEYS) +
+                 key +
                  operator("+") +
-                 identifier(*Command::VALID_KEYS)
+                 key
+      rules.push identifier(*Command::KEY_MAPPING.keys) +
+                 operator("+") +
+                 key +
+                 operator("+") +
+                 key +
+                 number
 
       # KEY+KEY+KEY+KEY
-      rules.push identifier(*Command::KEY_MAPPING.keys) +
-                 operator("+") +
-                 identifier(*Command::VALID_KEYS) +
-                 operator("+") +
-                 identifier(*Command::VALID_KEYS) +
-                 operator("+") +
-                 identifier(*Command::VALID_KEYS)
-
-      # KEY+KEY COUNT
-      rules.push identifier(*Command::KEY_MAPPING.keys) +
-                 operator("+") +
-                 identifier(*Command::VALID_KEYS) +
-                 number
-
-      # KEY+KEY+KEY COUNT
-      rules.push identifier(*Command::KEY_MAPPING.keys) +
-                 operator("+") +
-                 identifier(*Command::VALID_KEYS) +
-                 operator("+") +
-                 identifier(*Command::VALID_KEYS) +
-                 number
-
-      # KEY+KEY+KEY+KEY COUNT
-      rules.push identifier(*Command::KEY_MAPPING.keys) +
-                 operator("+") +
-                 identifier(*Command::VALID_KEYS) +
-                 operator("+") +
-                 identifier(*Command::VALID_KEYS) +
-                 operator("+") +
-                 identifier(*Command::VALID_KEYS) +
-                 number
+      key_combo = identifier(*Command::KEY_MAPPING.keys) +
+                  operator("+") +
+                  key +
+                  operator("+") +
+                  key +
+                  operator("+") +
+                  key
+      rules.push key_combo
+      rules.push key_combo.dup + number
 
       # COMMAND
       rules.push identifier(

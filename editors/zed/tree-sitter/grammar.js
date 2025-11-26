@@ -187,7 +187,7 @@ module.exports = grammar({
     ),
 
     modifier_key: $ => choice(
-      'Ctrl', 'Control', 'Alt', 'Option', 'Shift', 'Meta', 'Command'
+      'Ctrl', 'Control', 'Alt', 'Option', 'Shift', 'Meta', 'Command', 'Cmd'
     ),
 
     letter_key: $ => /[A-Za-z0-9]/,

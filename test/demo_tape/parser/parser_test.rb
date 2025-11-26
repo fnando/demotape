@@ -3,6 +3,10 @@
 require "test_helper"
 
 class ParserTest < Minitest::Test
+  test "parses syntax file" do
+    DemoTape::Parser.new.parse(File.read("test/fixtures/syntax.tape"))
+  end
+
   test "fails with invalid commands" do
     error = assert_raises(DemoTape::ParseError) do
       to_commands("FlyAway")

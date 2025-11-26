@@ -32,7 +32,7 @@ syn match demotapeKey "\<Numpad[0-9]\>"
 syn match demotapeKey "\<F\([1-9]\|1[0-2]\)\>"
 
 " Modifiers
-syn keyword demotapeModifier Ctrl Control Alt Option Shift Meta Command
+syn keyword demotapeModifier Ctrl Control Alt Option Shift Meta Command Cmd
 
 " Key combination operator
 syn match demotapeOperator "+"

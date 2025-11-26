@@ -85,7 +85,7 @@ contexts:
       push: possible_key_count
 
     # Modifiers
-    - match: '\b(Ctrl|Control|Alt|Option|Shift|Meta|Command)\b'
+    - match: '\b(Ctrl|Control|Alt|Option|Shift|Meta|Command|Cmd)\b'
       scope: keyword.control.demotape
       push: key_combo
 
