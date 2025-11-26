@@ -2,7 +2,7 @@
   "name": "demotape",
   "displayName": "Demo Tape",
   "description": "Syntax highlighting for DemoTape (.tape) files",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "publisher": "fnando",
   "icon": "icon.png",
   "license": "MIT",
@@ -15,6 +15,7 @@
   "files": [
     "*.json",
     "*.png",
+    "snippets",
     "LICENSE.md",
     "README.md"
   ],
@@ -43,6 +44,12 @@
         "language": "demotape",
         "scopeName": "source.demotape",
         "path": "./demotape.tmLanguage.json"
+      }
+    ],
+    "snippets": [
+      {
+        "language": "demotape",
+        "path": "./snippets/demotape.json"
       }
     ]
   }
