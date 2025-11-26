@@ -2,7 +2,7 @@
   "name": "demotape",
   "displayName": "Demo Tape",
   "description": "Syntax highlighting for DemoTape (.tape) files",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "publisher": "fnando",
   "icon": "icon.png",
   "license": "MIT",
@@ -21,6 +21,9 @@
   "categories": [
     "Programming Languages"
   ],
+  "devDependencies": {
+    "@vscode/vsce": "*"
+  },
   "contributes": {
     "languages": [
       {
