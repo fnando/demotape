@@ -2,11 +2,10 @@
   "name": "demotape",
   "displayName": "Demo Tape",
   "description": "Syntax highlighting for DemoTape (.tape) files",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "publisher": "fnando",
   "icon": "icon.png",
   "license": "MIT",
-  "publisher": "fnando",
   "repository": {
     "url": "https://github.com/fnando/demotape"
   },
@@ -16,7 +15,8 @@
   "files": [
     "*.json",
     "*.png",
-    "*.md"
+    "LICENSE.md",
+    "README.md"
   ],
   "categories": [
     "Programming Languages"

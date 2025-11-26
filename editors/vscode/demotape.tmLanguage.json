@@ -100,7 +100,7 @@
         },
         {
           "comment": "Key combinations with +",
-          "match": "\\b(Ctrl|Control|Alt|Option|Shift|Meta|Command|Enter|Return|Tab|Backspace|Delete|Escape|Esc|Space|Up|Down|Left|Right|Home|End|PageUp|PageDown|Insert|Cancel|Help|Pause|Semicolon|Colon|Equals|Slash|BackSlash|Numpad[0-9]|Multiply|Add|Separator|Subtract|Decimal|Divide|F[1-9]|F1[0-2]|[A-Za-z0-9])\\s*\\+\\s*(Ctrl|Control|Alt|Option|Shift|Meta|Command|Enter|Return|Tab|Backspace|Delete|Escape|Esc|Space|Up|Down|Left|Right|Home|End|PageUp|PageDown|Insert|Cancel|Help|Pause|Semicolon|Colon|Equals|Slash|Numpad[0-9]|Multiply|Add|Separator|Subtract|Decimal|Divide|F[1-9]|F1[0-2]|[A-Za-z0-9])",
+          "match": "\\b(Ctrl|Control|Alt|Option|Shift|Meta|Command|Cmd|Enter|Return|Tab|Backspace|Delete|Escape|Esc|Space|Up|Down|Left|Right|Home|End|PageUp|PageDown|Insert|Cancel|Help|Pause|Semicolon|Colon|Equals|Slash|BackSlash|Numpad[0-9]|Multiply|Add|Separator|Subtract|Decimal|Divide|F[1-9]|F1[0-2]|[A-Za-z0-9])\\s*\\+\\s*(Ctrl|Control|Alt|Option|Shift|Meta|Command|Cmd|Enter|Return|Tab|Backspace|Delete|Escape|Esc|Space|Up|Down|Left|Right|Home|End|PageUp|PageDown|Insert|Cancel|Help|Pause|Semicolon|Colon|Equals|Slash|Numpad[0-9]|Multiply|Add|Separator|Subtract|Decimal|Divide|F[1-9]|F1[0-2]|[A-Za-z0-9])",
           "captures": {
             "0": { "name": "keyword.control.demotape" }
           }
