@@ -11,7 +11,7 @@ Prefix your message with one of the following:
 - [Security] in case of vulnerabilities.
 -->
 
-## Unreleased
+## v0.0.10
 
 - [Fixed] Ensure timeout only runs when defined.
 
