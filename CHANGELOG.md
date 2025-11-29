@@ -11,6 +11,10 @@ Prefix your message with one of the following:
 - [Security] in case of vulnerabilities.
 -->
 
+## Unreleased
+
+- [Fixed] Ensure timeout only runs when defined.
+
 ## v0.0.9
 
 - [Fixed] Handle `SIGINT` and `SIGQUIT` signals to gracefully stop recording.

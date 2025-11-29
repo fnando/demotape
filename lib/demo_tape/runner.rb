@@ -231,8 +231,8 @@ module DemoTape
     def timeout
       Thread.new do
         tick = 0.01
-        timeout = Duration.parse(options.timeout).to_i
-        next unless timeout.positive?
+        timeout = Duration.parse(options.timeout) if options.timeout
+        next unless timeout&.positive?
 
         while timeout.positive?
           break unless read_state(:keep_recording)
