@@ -14,6 +14,8 @@ Prefix your message with one of the following:
 ## Unreleased
 
 - [Fixed] Handle `SIGINT` and `SIGQUIT` signals to gracefully stop recording.
+- [Added] Add `--timeout` and `Set timeout duration` to specify a maximum time
+  to wait for the demo tape execution.
 
 ## v0.0.8
 

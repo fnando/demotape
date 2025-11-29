@@ -101,7 +101,7 @@ module DemoTape
     SET_OPTIONS = %w[
       border_radius cursor_blink cursor_style cursor_width font_family font_size
       height line_height loop loop_delay margin margin_fill padding shell theme
-      typing_speed variable_typing width
+      typing_speed variable_typing width timeout
     ].freeze
 
     attr_reader :type, :args, :options, :children

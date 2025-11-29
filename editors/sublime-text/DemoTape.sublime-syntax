@@ -154,7 +154,7 @@ contexts:
       pop: true
 
   set_command:
-    - match: '\b(border_radius|shell|theme|width|height|font_size|font_family|line_height|cursor_blink|cursor_width|cursor_style|letter_spacing|padding|margin|margin_fill|fps|typing_speed|loop|loop_delay|variable_typing|run_enter_delay|run_sleep)(\.[a-z_]+)?\b'
+    - match: '\b(border_radius|shell|theme|width|height|font_size|font_family|line_height|cursor_blink|cursor_width|cursor_style|letter_spacing|padding|margin|margin_fill|fps|typing_speed|loop|loop_delay|timeout|variable_typing|run_enter_delay|run_sleep)(\.[a-z_]+)?\b'
       captures:
         1: variable.parameter.demotape
         2: variable.other.member.demotape

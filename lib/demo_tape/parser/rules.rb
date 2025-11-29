@@ -343,7 +343,7 @@ module DemoTape
       # Set attribute DURATION
       rules.push identifier("Set") +
                  identifier("loop_delay", "run_sleep", "run_enter_delay",
-                            "typing_speed") +
+                            "typing_speed", "timeout") +
                  duration
 
       # Set attribute BOOLEAN
@@ -355,7 +355,7 @@ module DemoTape
       rules.push identifier("Set") +
                  identifier("width", "height", "cursor_width", "font_size",
                             "padding", "margin", "loop_delay", "line_height",
-                            "border_radius", "typing_speed") +
+                            "border_radius", "typing_speed", "timeout") +
                  number
 
       # Set attribute STRING

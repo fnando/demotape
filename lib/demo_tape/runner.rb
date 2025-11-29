@@ -35,7 +35,11 @@ module DemoTape
       error_message = error.message if error.respond_to?(:message)
 
       thor.say_error "\nERROR: #{error_message}", :red
-      puts error.backtrace if error.respond_to?(:backtrace)
+
+      if !error.is_a?(TimeoutError) && error.respond_to?(:backtrace)
+        puts error.backtrace
+      end
+
       exit 1
     end
 
@@ -166,6 +170,7 @@ module DemoTape
     end
 
     def run
+      Thread.report_on_exception = false
       Thread.abort_on_exception = true
       Capybara.default_driver = :selenium_chrome_headless
 
@@ -205,6 +210,7 @@ module DemoTape
         raise unless exited
       end.join
 
+      threads << timeout
       threads << recorder
       threads << executor(commands)
       threads.each(&:join)
@@ -220,6 +226,25 @@ module DemoTape
     ensure
       FileUtils.rm_rf(tmp_dir)
       ttyd.stop
+    end
+
+    def timeout
+      Thread.new do
+        tick = 0.01
+        timeout = Duration.parse(options.timeout).to_i
+        next unless timeout.positive?
+
+        while timeout.positive?
+          break unless read_state(:keep_recording)
+
+          sleep tick
+          timeout -= tick
+        end
+
+        unless timeout.positive?
+          raise TimeoutError, "Demo tape execution timed out"
+        end
+      end
     end
 
     def ttyd_options

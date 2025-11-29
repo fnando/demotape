@@ -30,4 +30,5 @@ module DemoTape
   require_relative "demo_tape/formatter"
 
   ParseError = Class.new(StandardError)
+  TimeoutError = Class.new(StandardError)
 end

@@ -140,6 +140,9 @@ module DemoTape
            type: :numeric,
            default: 3,
            desc: "Delay (in seconds) after running each command"
+    option :timeout,
+           type: :numeric,
+           desc: "Maximum time (in seconds) to allow the demo tape to run"
     def _run(file_path = "")
       options = self.options.dup
       options[:padding] =

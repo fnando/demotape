@@ -5,7 +5,10 @@
     { "trigger": "Type", "contents": "Type \"${1:text}\"" },
     { "trigger": "Type@", "contents": "Type@${1:50ms} \"${2:text}\"" },
     { "trigger": "TypeFile", "contents": "TypeFile \"${1:path/to/file}\"" },
-    { "trigger": "TypeFile@", "contents": "TypeFile@${1:50ms} \"${2:path/to/file}\"" },
+    {
+      "trigger": "TypeFile@",
+      "contents": "TypeFile@${1:50ms} \"${2:path/to/file}\"",
+    },
     { "trigger": "Run", "contents": "Run \"${1:command}\"" },
     { "trigger": "Run@", "contents": "Run@${1:1s} \"${2:command}\"" },
     { "trigger": "Copy", "contents": "Copy \"${1:text}\"" },
@@ -54,36 +57,106 @@
     },
     { "trigger": "Set padding", "contents": "Set padding ${1:20}" },
     { "trigger": "Set margin", "contents": "Set margin ${1:60}" },
-    { "trigger": "Set margin_fill", "contents": "Set margin_fill \"${1:#6b50ff}\"" },
+    {
+      "trigger": "Set margin_fill",
+      "contents": "Set margin_fill \"${1:#6b50ff}\"",
+    },
     { "trigger": "Set border_radius", "contents": "Set border_radius ${1:10}" },
     { "trigger": "Set typing_speed", "contents": "Set typing_speed ${1:50ms}" },
-    { "trigger": "Set variable_typing", "contents": "Set variable_typing ${1:true}" },
+    {
+      "trigger": "Set variable_typing",
+      "contents": "Set variable_typing ${1:true}",
+    },
     { "trigger": "Set loop", "contents": "Set loop ${1:true}" },
     { "trigger": "Set loop_delay", "contents": "Set loop_delay ${1:2s}" },
-    { "trigger": "Set run_enter_delay", "contents": "Set run_enter_delay ${1:300ms}" },
+    { "trigger": "Set timeout", "contents": "Set timeout ${1:1m}" },
+    {
+      "trigger": "Set run_enter_delay",
+      "contents": "Set run_enter_delay ${1:300ms}",
+    },
     { "trigger": "Set run_sleep", "contents": "Set run_sleep ${1:1s}" },
 
     // Theme color overrides
-    { "trigger": "Set theme.background", "contents": "Set theme.background \"${1:#222222}\"" },
-    { "trigger": "Set theme.foreground", "contents": "Set theme.foreground \"${1:#ffffff}\"" },
-    { "trigger": "Set theme.cursor", "contents": "Set theme.cursor \"${1:#00ff00}\"" },
-    { "trigger": "Set theme.selection_background", "contents": "Set theme.selection_background \"${1:#444444}\"" },
-    { "trigger": "Set theme.black", "contents": "Set theme.black \"${1:#000000}\"" },
-    { "trigger": "Set theme.red", "contents": "Set theme.red \"${1:#ff0000}\"" },
-    { "trigger": "Set theme.green", "contents": "Set theme.green \"${1:#00ff00}\"" },
-    { "trigger": "Set theme.yellow", "contents": "Set theme.yellow \"${1:#ffff00}\"" },
-    { "trigger": "Set theme.blue", "contents": "Set theme.blue \"${1:#0000ff}\"" },
-    { "trigger": "Set theme.magenta", "contents": "Set theme.magenta \"${1:#ff00ff}\"" },
-    { "trigger": "Set theme.cyan", "contents": "Set theme.cyan \"${1:#00ffff}\"" },
-    { "trigger": "Set theme.white", "contents": "Set theme.white \"${1:#ffffff}\"" },
-    { "trigger": "Set theme.bright_black", "contents": "Set theme.bright_black \"${1:#555555}\"" },
-    { "trigger": "Set theme.bright_red", "contents": "Set theme.bright_red \"${1:#ff5555}\"" },
-    { "trigger": "Set theme.bright_green", "contents": "Set theme.bright_green \"${1:#55ff55}\"" },
-    { "trigger": "Set theme.bright_yellow", "contents": "Set theme.bright_yellow \"${1:#ffff55}\"" },
-    { "trigger": "Set theme.bright_blue", "contents": "Set theme.bright_blue \"${1:#5555ff}\"" },
-    { "trigger": "Set theme.bright_magenta", "contents": "Set theme.bright_magenta \"${1:#ff55ff}\"" },
-    { "trigger": "Set theme.bright_cyan", "contents": "Set theme.bright_cyan \"${1:#55ffff}\"" },
-    { "trigger": "Set theme.bright_white", "contents": "Set theme.bright_white \"${1:#ffffff}\"" },
+    {
+      "trigger": "Set theme.background",
+      "contents": "Set theme.background \"${1:#222222}\"",
+    },
+    {
+      "trigger": "Set theme.foreground",
+      "contents": "Set theme.foreground \"${1:#ffffff}\"",
+    },
+    {
+      "trigger": "Set theme.cursor",
+      "contents": "Set theme.cursor \"${1:#00ff00}\"",
+    },
+    {
+      "trigger": "Set theme.selection_background",
+      "contents": "Set theme.selection_background \"${1:#444444}\"",
+    },
+    {
+      "trigger": "Set theme.black",
+      "contents": "Set theme.black \"${1:#000000}\"",
+    },
+    {
+      "trigger": "Set theme.red",
+      "contents": "Set theme.red \"${1:#ff0000}\"",
+    },
+    {
+      "trigger": "Set theme.green",
+      "contents": "Set theme.green \"${1:#00ff00}\"",
+    },
+    {
+      "trigger": "Set theme.yellow",
+      "contents": "Set theme.yellow \"${1:#ffff00}\"",
+    },
+    {
+      "trigger": "Set theme.blue",
+      "contents": "Set theme.blue \"${1:#0000ff}\"",
+    },
+    {
+      "trigger": "Set theme.magenta",
+      "contents": "Set theme.magenta \"${1:#ff00ff}\"",
+    },
+    {
+      "trigger": "Set theme.cyan",
+      "contents": "Set theme.cyan \"${1:#00ffff}\"",
+    },
+    {
+      "trigger": "Set theme.white",
+      "contents": "Set theme.white \"${1:#ffffff}\"",
+    },
+    {
+      "trigger": "Set theme.bright_black",
+      "contents": "Set theme.bright_black \"${1:#555555}\"",
+    },
+    {
+      "trigger": "Set theme.bright_red",
+      "contents": "Set theme.bright_red \"${1:#ff5555}\"",
+    },
+    {
+      "trigger": "Set theme.bright_green",
+      "contents": "Set theme.bright_green \"${1:#55ff55}\"",
+    },
+    {
+      "trigger": "Set theme.bright_yellow",
+      "contents": "Set theme.bright_yellow \"${1:#ffff55}\"",
+    },
+    {
+      "trigger": "Set theme.bright_blue",
+      "contents": "Set theme.bright_blue \"${1:#5555ff}\"",
+    },
+    {
+      "trigger": "Set theme.bright_magenta",
+      "contents": "Set theme.bright_magenta \"${1:#ff55ff}\"",
+    },
+    {
+      "trigger": "Set theme.bright_cyan",
+      "contents": "Set theme.bright_cyan \"${1:#55ffff}\"",
+    },
+    {
+      "trigger": "Set theme.bright_white",
+      "contents": "Set theme.bright_white \"${1:#ffffff}\"",
+    },
 
     // Special keys
     "Enter",
