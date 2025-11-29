@@ -175,8 +175,8 @@ module DemoTape
       thor.say_status :info, "Using #{thor.set_color(options.shell, :blue)}"
       debug "Running preflight checks"
       preflight_checks
-
       resolve_includes
+
       if options.screenshot
         commands << Command.new("Screenshot", "",
                                 tokens: [Token::Identifier.new("Screenshot")])
@@ -187,9 +187,23 @@ module DemoTape
       run_meta_commands
       resolve_output_paths
       setup_tmp_dir
-      start_ttyd
-      resize_browser_window
-      send_ttyd_options
+      exited = false
+
+      handler = proc do
+        exited = true
+        exit 1
+      end
+
+      Signal.trap("SIGINT", &handler)
+      Signal.trap("SIGQUIT", &handler)
+
+      Thread.new do
+        start_ttyd
+        resize_browser_window
+        send_ttyd_options
+      rescue StandardError
+        raise unless exited
+      end.join
 
       threads << recorder
       threads << executor(commands)
