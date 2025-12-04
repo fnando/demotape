@@ -17,12 +17,9 @@ module DemoTape
 
     def ffmpeg_settings(single_frame: false)
       if single_frame
-        text_input = tmp_dir.join(format("frame-text-%05d.png", frame_count))
-        cursor_input =
-          tmp_dir.join(format("frame-cursor-%05d.png", frame_count))
+        frame_input = tmp_dir.join(format("frame-%05d.png", frame_count))
       else
-        text_input = tmp_dir.join("frame-text-%05d.png")
-        cursor_input = tmp_dir.join("frame-cursor-%05d.png")
+        frame_input = tmp_dir.join("frame-%05d.png")
       end
 
       mask_path = tmp_dir.join("border-radius-mask.png")
@@ -41,13 +38,11 @@ module DemoTape
 
         inputs = []
         if single_frame
-          inputs << "-i #{Shellwords.escape(text_input.to_s)}"
-          inputs << "-i #{Shellwords.escape(cursor_input.to_s)}"
+          inputs << "-i #{Shellwords.escape(frame_input.to_s)}"
           inputs << "-i #{Shellwords.escape(options.margin_fill)}"
           inputs << "-i #{Shellwords.escape(mask_path)}"
         else
-          inputs << "-framerate #{options.fps} -i #{text_input}"
-          inputs << "-framerate #{options.fps} -i #{cursor_input}"
+          inputs << "-framerate #{options.fps} -i #{frame_input}"
           inputs << "-loop 1 -i #{Shellwords.escape(options.margin_fill)}"
           inputs << "-loop 1 -i #{Shellwords.escape(mask_path)}"
         end
@@ -57,12 +52,10 @@ module DemoTape
 
         inputs = []
         if single_frame
-          inputs << "-i #{Shellwords.escape(text_input.to_s)}"
-          inputs << "-i #{Shellwords.escape(cursor_input.to_s)}"
+          inputs << "-i #{Shellwords.escape(frame_input.to_s)}"
           inputs << "-i #{Shellwords.escape(mask_path)}"
         else
-          inputs << "-framerate #{options.fps} -i #{text_input}"
-          inputs << "-framerate #{options.fps} -i #{cursor_input}"
+          inputs << "-framerate #{options.fps} -i #{frame_input}"
           inputs << "-loop 1 -i #{Shellwords.escape(mask_path)}"
         end
       end
@@ -164,7 +157,7 @@ module DemoTape
     end
 
     def compute_image_bounds
-      first_frame = tmp_dir.glob("frame-text-*.png").first
+      first_frame = tmp_dir.glob("frame-*.png").first
       actual_width, actual_height = get_png_dimensions(first_frame)
       padding = options.padding
       margin = options.margin
@@ -205,20 +198,18 @@ module DemoTape
     end
 
     def build_filter_with_image_background(bounds, _mask_path)
-      # Input 0: text frames
-      # Input 1: cursor frames
-      # Input 2: background image
-      # Input 3: mask
+      # Input 0: combined frame (text + cursor)
+      # Input 1: background image
+      # Input 2: mask
 
       # Scale background to output size and center/crop if needed
-      filter = "[2:v]scale=#{bounds.with_margin_width}:#{bounds.with_margin_height}:force_original_aspect_ratio=increase,crop=#{bounds.with_margin_width}:#{bounds.with_margin_height}[bg];" # rubocop:disable Layout/LineLength
+      filter = "[1:v]scale=#{bounds.with_margin_width}:#{bounds.with_margin_height}:force_original_aspect_ratio=increase,crop=#{bounds.with_margin_width}:#{bounds.with_margin_height}[bg];" # rubocop:disable Layout/LineLength
 
-      # Overlay text+cursor, add padding
-      filter += "[0:v][1:v]overlay=0:0"
-      filter += ",pad=#{bounds.with_padding_width}:#{bounds.with_padding_height}:#{bounds.padding_left}:#{bounds.padding_top}:#{theme.background}" # rubocop:disable Layout/LineLength
+      # Add padding to frame
+      filter += "[0:v]pad=#{bounds.with_padding_width}:#{bounds.with_padding_height}:#{bounds.padding_left}:#{bounds.padding_top}:#{theme.background}" # rubocop:disable Layout/LineLength
 
       # Apply border radius mask
-      filter += "[term];[3]loop=-1[mask];[term][mask]alphamerge[terminal];"
+      filter += "[term];[2]loop=-1[mask];[term][mask]alphamerge[terminal];"
 
       # Overlay terminal on background, centered
       filter += "[bg][terminal]overlay=(W-w)/2:(H-h)/2"
@@ -226,13 +217,16 @@ module DemoTape
     end
 
     def build_filter_with_color_background(bounds, _mask_path)
-      # Overlay text+cursor, add padding, then add margin
-      filter = "[0:v][1:v]overlay=0:0"
-      filter += ",pad=#{bounds.with_padding_width}:#{bounds.with_padding_height}:#{bounds.padding_left}:#{bounds.padding_top}:#{theme.background}" # rubocop:disable Layout/LineLength
+      # Input 0: combined frame (text + cursor)
+      # Input 1: mask
+
+      # Add padding to frame
+      filter = "[0:v]pad=#{bounds.with_padding_width}:#{bounds.with_padding_height}:#{bounds.padding_left}:#{bounds.padding_top}:#{theme.background}" # rubocop:disable Layout/LineLength
 
       # Apply border radius mask
-      filter += "[term];[2]loop=-1[mask];[term][mask]alphamerge"
+      filter += "[term];[1]loop=-1[mask];[term][mask]alphamerge"
 
+      # Add margin
       filter += ",pad=#{bounds.with_margin_width}:#{bounds.with_margin_height}:#{bounds.margin_left}:#{bounds.margin_top}:#{options.margin_fill}" # rubocop:disable Layout/LineLength
       filter
     end

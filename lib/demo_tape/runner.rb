@@ -368,22 +368,14 @@ module DemoTape
     end
 
     def capture(frame)
-      text_data = nil
-      cursor_data = nil
-
-      session_mutex.synchronize do
-        text_data, cursor_data =
-          *session.evaluate_script(capture_script, text_canvas, cursor_canvas)
-      end
-
-      text_png = Base64
-                 .decode64(text_data.sub(%r{^data:image/png;base64,}, ""))
-      cursor_png = Base64
-                   .decode64(cursor_data.sub(%r{^data:image/png;base64,}, ""))
       frame_with_pad = format("%05d", frame)
 
-      tmp_dir.join("frame-text-#{frame_with_pad}.png").binwrite(text_png)
-      tmp_dir.join("frame-cursor-#{frame_with_pad}.png").binwrite(cursor_png)
+      session_mutex.synchronize do
+        # We should not use `session.save_screenshot`, as it's slower.
+        session.driver
+               .browser
+               .save_screenshot(tmp_dir.join("frame-#{frame_with_pad}.png"))
+      end
     end
 
     def generate_output
