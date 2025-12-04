@@ -15,9 +15,16 @@ module DemoTape
       @bounds ||= compute_image_bounds
     end
 
-    def video(path)
-      text_input = tmp_dir.join("frame-text-%05d.png")
-      cursor_input = tmp_dir.join("frame-cursor-%05d.png")
+    def ffmpeg_settings(single_frame: false)
+      if single_frame
+        text_input = tmp_dir.join(format("frame-text-%05d.png", frame_count))
+        cursor_input =
+          tmp_dir.join(format("frame-cursor-%05d.png", frame_count))
+      else
+        text_input = tmp_dir.join("frame-text-%05d.png")
+        cursor_input = tmp_dir.join("frame-cursor-%05d.png")
+      end
+
       mask_path = tmp_dir.join("border-radius-mask.png")
 
       create_border_radius_mask(
@@ -33,19 +40,38 @@ module DemoTape
         filter = build_filter_with_image_background(bounds, mask_path)
 
         inputs = []
-        inputs << "-framerate #{options.fps} -i #{text_input}"
-        inputs << "-framerate #{options.fps} -i #{cursor_input}"
-        inputs << "-loop 1 -i #{Shellwords.escape(options.margin_fill)}"
-        inputs << "-loop 1 -i #{Shellwords.escape(mask_path)}"
+        if single_frame
+          inputs << "-i #{Shellwords.escape(text_input.to_s)}"
+          inputs << "-i #{Shellwords.escape(cursor_input.to_s)}"
+          inputs << "-i #{Shellwords.escape(options.margin_fill)}"
+          inputs << "-i #{Shellwords.escape(mask_path)}"
+        else
+          inputs << "-framerate #{options.fps} -i #{text_input}"
+          inputs << "-framerate #{options.fps} -i #{cursor_input}"
+          inputs << "-loop 1 -i #{Shellwords.escape(options.margin_fill)}"
+          inputs << "-loop 1 -i #{Shellwords.escape(mask_path)}"
+        end
       else
         # Use solid color as background
         filter = build_filter_with_color_background(bounds, mask_path)
 
         inputs = []
-        inputs << "-framerate #{options.fps} -i #{text_input}"
-        inputs << "-framerate #{options.fps} -i #{cursor_input}"
-        inputs << "-loop 1 -i #{Shellwords.escape(mask_path)}"
+        if single_frame
+          inputs << "-i #{Shellwords.escape(text_input.to_s)}"
+          inputs << "-i #{Shellwords.escape(cursor_input.to_s)}"
+          inputs << "-i #{Shellwords.escape(mask_path)}"
+        else
+          inputs << "-framerate #{options.fps} -i #{text_input}"
+          inputs << "-framerate #{options.fps} -i #{cursor_input}"
+          inputs << "-loop 1 -i #{Shellwords.escape(mask_path)}"
+        end
       end
+
+      {inputs:, filter:}
+    end
+
+    def video(path)
+      ffmpeg_settings => {inputs:, filter:}
 
       encoder = if File.extname(path).downcase == ".avi"
                   "-c:v ffv1"
@@ -68,37 +94,7 @@ module DemoTape
     end
 
     def webm(path)
-      text_input = tmp_dir.join("frame-text-%05d.png")
-      cursor_input = tmp_dir.join("frame-cursor-%05d.png")
-
-      # Always create border radius mask (square corners if radius is 0)
-      mask_path = tmp_dir.join("border-radius-mask.png")
-      create_border_radius_mask(
-        bounds.with_padding_width,
-        bounds.with_padding_height,
-        options.border_radius,
-        mask_path
-      )
-
-      # Check if margin_fill is a file path
-      if File.file?(options.margin_fill)
-        # Use image as background
-        filter = build_filter_with_image_background(bounds, mask_path)
-
-        inputs = []
-        inputs << "-framerate #{options.fps} -i #{text_input}"
-        inputs << "-framerate #{options.fps} -i #{cursor_input}"
-        inputs << "-loop 1 -i #{Shellwords.escape(options.margin_fill)}"
-        inputs << "-loop 1 -i #{Shellwords.escape(mask_path)}"
-      else
-        # Use solid color as background
-        filter = build_filter_with_color_background(bounds, mask_path)
-
-        inputs = []
-        inputs << "-framerate #{options.fps} -i #{text_input}"
-        inputs << "-framerate #{options.fps} -i #{cursor_input}"
-        inputs << "-loop 1 -i #{Shellwords.escape(mask_path)}"
-      end
+      ffmpeg_settings => {inputs:, filter:}
 
       cmd = <<~CMD
         ffmpeg -y \
@@ -118,38 +114,8 @@ module DemoTape
     end
 
     def gif(path)
-      text_input = tmp_dir.join("frame-text-%05d.png")
-      cursor_input = tmp_dir.join("frame-cursor-%05d.png")
+      ffmpeg_settings => {inputs:, filter:}
       loop_flag = options.loop ? "-loop 0" : "-loop -1"
-
-      # Always create border radius mask (square corners if radius is 0)
-      mask_path = tmp_dir.join("border-radius-mask.png")
-      create_border_radius_mask(
-        bounds.with_padding_width,
-        bounds.with_padding_height,
-        options.border_radius,
-        mask_path
-      )
-
-      # Check if margin_fill is a file path
-      if File.file?(options.margin_fill)
-        # Use image as background
-        filter = build_filter_with_image_background(bounds, mask_path)
-
-        inputs = []
-        inputs << "-framerate #{options.fps} -i #{text_input}"
-        inputs << "-framerate #{options.fps} -i #{cursor_input}"
-        inputs << "-loop 1 -i #{Shellwords.escape(options.margin_fill)}"
-        inputs << "-loop 1 -i #{Shellwords.escape(mask_path)}"
-      else
-        # Use solid color as background
-        filter = build_filter_with_color_background(bounds, mask_path)
-
-        inputs = []
-        inputs << "-framerate #{options.fps} -i #{text_input}"
-        inputs << "-framerate #{options.fps} -i #{cursor_input}"
-        inputs << "-loop 1 -i #{Shellwords.escape(mask_path)}"
-      end
 
       filter = apply_gif_loop_delay(filter)
       total_frames = calculate_gif_total_frames
@@ -169,37 +135,7 @@ module DemoTape
     end
 
     def png(path)
-      text_input = tmp_dir.join(format("frame-text-%05d.png", frame_count))
-      cursor_input = tmp_dir.join(format("frame-cursor-%05d.png", frame_count))
-
-      # Always create border radius mask (square corners if radius is 0)
-      mask_path = tmp_dir.join("border-radius-mask.png")
-      create_border_radius_mask(
-        bounds.with_padding_width,
-        bounds.with_padding_height,
-        options.border_radius,
-        mask_path
-      )
-
-      # Check if margin_fill is a file path
-      if File.file?(options.margin_fill)
-        # Use image as background
-        filter = build_filter_with_image_background(bounds, mask_path)
-
-        inputs = []
-        inputs << "-i #{Shellwords.escape(text_input.to_s)}"
-        inputs << "-i #{Shellwords.escape(cursor_input.to_s)}"
-        inputs << "-i #{Shellwords.escape(options.margin_fill)}"
-        inputs << "-i #{Shellwords.escape(mask_path)}"
-      else
-        # Use solid color as background
-        filter = build_filter_with_color_background(bounds, mask_path)
-
-        inputs = []
-        inputs << "-i #{Shellwords.escape(text_input.to_s)}"
-        inputs << "-i #{Shellwords.escape(cursor_input.to_s)}"
-        inputs << "-i #{Shellwords.escape(mask_path)}"
-      end
+      ffmpeg_settings(single_frame: true) => {inputs:, filter:}
 
       cmd = <<~CMD
         ffmpeg -y \
