@@ -16,11 +16,11 @@ module DemoTape
     end
 
     def ffmpeg_settings(single_frame: false)
-      if single_frame
-        frame_input = tmp_dir.join(format("frame-%05d.png", frame_count))
-      else
-        frame_input = tmp_dir.join("frame-%05d.png")
-      end
+      frame_input = if single_frame
+                      tmp_dir.join(format("frame-%05d.png", frame_count))
+                    else
+                      tmp_dir.join("frame-%05d.png")
+                    end
 
       mask_path = tmp_dir.join("border-radius-mask.png")
 
