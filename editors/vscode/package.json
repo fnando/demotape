@@ -2,7 +2,7 @@
   "name": "demotape",
   "displayName": "Demo Tape",
   "description": "Syntax highlighting for DemoTape (.tape) files",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "publisher": "fnando",
   "icon": "icon.png",
   "license": "MIT",
